@@ -12,4 +12,4 @@ namespace: "ems-scraper"
 mysql:
   storage:
     size: "10Gi"
-    storageClass: "local-path"
+    storageClass: "local"

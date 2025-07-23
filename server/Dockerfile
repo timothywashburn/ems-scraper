@@ -1,8 +1,7 @@
 FROM node:18-alpine
 WORKDIR /app
-COPY server/ server/
+COPY . .
 
-WORKDIR /app/server
 RUN npm ci
 RUN npm run build
 EXPOSE 3000

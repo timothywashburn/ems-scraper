@@ -1,0 +1,15 @@
+image:
+  registry: kyrokrypt/ems-scraper
+  pullPolicy: Always
+  tag: latest
+
+ingress:
+  host: "ems-scraper.example.com"
+  ingressClassName: traefik
+
+namespace: "ems-scraper"
+
+mysql:
+  storage:
+    size: "10Gi"
+    storageClass: "standard"

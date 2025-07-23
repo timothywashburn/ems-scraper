@@ -1,0 +1,9 @@
+.idea/
+node_modules/
+dist/
+*.log
+*.local
+*.tsbuildinfo
+.DS_Store
+ignore-*
+create-secrets.sh

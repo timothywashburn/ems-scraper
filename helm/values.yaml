@@ -4,7 +4,7 @@ image:
   tag: latest
 
 ingress:
-  host: "ems-scraper.example.com"
+  host: "ems.timothyw.dev"
   ingressClassName: traefik
 
 namespace: "ems-scraper"

@@ -14,13 +14,6 @@ spec:
         pathType: Prefix
         backend:
           service:
-            name: server-service
+            name: ems-scraper-service
             port:
               number: 3000
-      - path: /
-        pathType: Prefix
-        backend:
-          service:
-            name: client-service
-            port:
-              number: 80

@@ -26,16 +26,6 @@ spec:
               key: root-password
         - name: MYSQL_DATABASE
           value: "ems_scraper"
-        - name: MYSQL_USER
-          valueFrom:
-            secretKeyRef:
-              name: mysql-secret
-              key: username
-        - name: MYSQL_PASSWORD
-          valueFrom:
-            secretKeyRef:
-              name: mysql-secret
-              key: password
         volumeMounts:
         - name: mysql-storage
           mountPath: /var/lib/mysql

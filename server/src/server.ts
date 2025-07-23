@@ -4,7 +4,7 @@ import dotenv from 'dotenv';
 import ApiManager from '@/controllers/api-manager';
 import DatabaseManager from '@/controllers/database-manager';
 
-dotenv.config();
+dotenv.config({ path: '.env.local' });
 
 const app = express();
 const PORT = 3000;

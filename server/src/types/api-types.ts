@@ -29,7 +29,6 @@ export interface ApiErrorResponse {
 export enum AuthType {
   NONE = 'none',
   AUTHENTICATED = 'authenticated',
-  VERIFIED_EMAIL = 'verified_email',
 }
 
 export interface ApiEndpoint<TReq = any, TRes = any> {

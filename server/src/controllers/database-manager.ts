@@ -8,11 +8,11 @@ export default class DatabaseManager {
 
     async connect(): Promise<void> {
         try {
-            if (!process.env.MYSQL_HOST) throw new Error('MYSQL_HOST environment variable is required');
-            if (!process.env.MYSQL_PORT) throw new Error('MYSQL_PORT environment variable is required');
-            if (!process.env.MYSQL_USER) throw new Error('MYSQL_USER environment variable is required');
-            if (!process.env.MYSQL_PASSWORD) throw new Error('MYSQL_PASSWORD environment variable is required');
-            if (!process.env.MYSQL_DATABASE) throw new Error('MYSQL_DATABASE environment variable is required');
+            if (process.env.MYSQL_HOST === undefined) throw new Error('MYSQL_HOST environment variable is required');
+            if (process.env.MYSQL_PORT === undefined) throw new Error('MYSQL_PORT environment variable is required');
+            if (process.env.MYSQL_USER === undefined) throw new Error('MYSQL_USER environment variable is required');
+            if (process.env.MYSQL_PASSWORD === undefined) throw new Error('MYSQL_PASSWORD environment variable is required');
+            if (process.env.MYSQL_DATABASE === undefined) throw new Error('MYSQL_DATABASE environment variable is required');
 
             const config = {
                 host: process.env.MYSQL_HOST,

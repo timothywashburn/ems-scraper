@@ -90,9 +90,8 @@ export default class ApiManager {
 
     addEndpoint<TReq, TRes>(endpoint: ApiEndpoint<TReq, TRes>) {
         const handlers: RequestHandler[] = [];
-        if (endpoint.auth === AuthType.AUTHENTICATED || endpoint.auth === AuthType.VERIFIED_EMAIL) {
-            handlers.push(this.handleAuth);
-        }
+
+        if (endpoint.auth === AuthType.AUTHENTICATED) handlers.push(this.handleAuth);
         handlers.push(endpoint.handler);
 
         this.router[endpoint.method](endpoint.path, ...handlers);

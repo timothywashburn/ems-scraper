@@ -32,15 +32,12 @@ spec:
         - name: MYSQL_DATABASE
           value: "ems_scraper"
         - name: MYSQL_USER
-          valueFrom:
-            secretKeyRef:
-              name: mysql-secret
-              key: username
+          value: "root"
         - name: MYSQL_PASSWORD
           valueFrom:
             secretKeyRef:
               name: mysql-secret
-              key: password
+              key: root-password
         resources:
           requests:
             memory: "128Mi"

@@ -45,15 +45,15 @@ spec:
           limits:
             memory: "256Mi"
             cpu: "200m"
-        livenessProbe:
-          httpGet:
-            path: /api/status
-            port: 3000
-          initialDelaySeconds: 30
-          periodSeconds: 10
-        readinessProbe:
-          httpGet:
-            path: /api/status
-            port: 3000
-          initialDelaySeconds: 5
-          periodSeconds: 5
+#         livenessProbe: # TODO: re-enable when api is working
+#           httpGet:
+#             path: /api/status
+#             port: 3000
+#           initialDelaySeconds: 30
+#           periodSeconds: 10
+#         readinessProbe:
+#           httpGet:
+#             path: /api/status
+#             port: 3000
+#           initialDelaySeconds: 5
+#           periodSeconds: 5

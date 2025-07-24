@@ -24,24 +24,9 @@ export default class DatabaseManager {
 
             this.connection = await mysql.createConnection(config);
             console.log('MySQL connected successfully');
-
-            await this.testConnection();
         } catch (error) {
             console.error('MySQL connection error:', error);
             process.exit(1);
-        }
-    }
-
-    private async testConnection(): Promise<void> {
-        if (!this.connection) {
-            throw new Error('No database connection');
-        }
-
-        try {
-            const [rows] = await this.connection.execute('SELECT 1 as test');
-            console.log('MySQL connection test successful');
-        } catch (error) {
-            throw new Error('MySQL connection test failed');
         }
     }
 
@@ -68,9 +53,7 @@ export default class DatabaseManager {
     }
 
     static getInstance(): DatabaseManager {
-        if (!DatabaseManager.instance) {
-            DatabaseManager.instance = new DatabaseManager();
-        }
+        if (!DatabaseManager.instance) DatabaseManager.instance = new DatabaseManager();
         return DatabaseManager.instance;
     }
 }

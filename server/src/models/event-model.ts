@@ -1,6 +1,6 @@
 import DatabaseManager from '@/controllers/database-manager';
 import { Event, RawEventData, EventChanges } from '@/types/event-types';
-import { EVENTS_SCHEMA } from './events-schema';
+import { EVENT_SCHEMA } from './event-schema';
 
 export class EventModel {
   private db: DatabaseManager;
@@ -238,7 +238,7 @@ export class EventModel {
   // Initialize database schema
   async initializeSchema(): Promise<void> {
     // Split and execute each statement
-    const statements = EVENTS_SCHEMA.split(';').filter(stmt => stmt.trim().length > 0);
+    const statements = EVENT_SCHEMA.split(';').filter(stmt => stmt.trim().length > 0);
     for (const statement of statements) {
       await this.db.query(statement);
     }

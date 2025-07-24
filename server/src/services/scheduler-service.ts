@@ -1,5 +1,7 @@
 import { ScraperService } from './scraper-service';
 
+import { ScraperStats } from "@/types/scraper-types";
+
 export class SchedulerService {
   private scraper: ScraperService;
   private intervalId: NodeJS.Timeout | null = null;
@@ -84,14 +86,7 @@ export class SchedulerService {
   }
 
   // Manual trigger for testing
-  async triggerManualScrape(): Promise<{
-    totalDays: number;
-    totalEvents: number;
-    inserted: number;
-    updated: number;
-    totalChanges: number;
-    violations: string[];
-  }> {
+  async triggerManualScrape(): Promise<ScraperStats> {
     console.log('🔧 Manual scrape triggered');
     return await this.scraper.scrapeUpcoming();
   }

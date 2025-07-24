@@ -7,6 +7,7 @@ export const SCRAPER_CONFIG = {
   // Rate limiting settings
   // REQUEST_DELAY_MS: 4000,
   REQUEST_DELAY_MS: 2000,
+  MIN_REQUEST_DELAY_MS: 1000,
   MAX_RETRIES: 8,
   EXPONENTIAL_BACKOFF_BASE: 1.5,
   

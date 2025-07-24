@@ -1,7 +1,6 @@
-export const EVENTS_SCHEMA = `
+export const EVENT_SCHEMA = `
 
 CREATE TABLE IF NOT EXISTS raw_events (
-    -- Primary key - perfectly unique across all events
     id INT PRIMARY KEY,
     
     -- Event details

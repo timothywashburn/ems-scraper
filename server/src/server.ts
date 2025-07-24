@@ -6,7 +6,7 @@ import DatabaseManager from '@/controllers/database-manager';
 import { ScraperService } from '@/services/scraper-service';
 import { SCRAPER_CONFIG } from '@/config/scraper-config';
 
-dotenv.config({ path: '.env.local' });
+dotenv.config({ path: ['.env', '.env.local'] });
 
 const app = express();
 const PORT = 3000;

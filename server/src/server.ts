@@ -3,6 +3,8 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import ApiManager from '@/controllers/api-manager';
 import DatabaseManager from '@/controllers/database-manager';
+import { ScraperService } from '@/services/scraper-service';
+import { SCRAPER_CONFIG } from '@/config/scraper-config';
 
 dotenv.config({ path: '.env.local' });
 
@@ -15,6 +17,33 @@ app.use(express.json());
 const startServer = async () => {
     try {
         await DatabaseManager.getInstance().connect();
+        
+        // Initialize scraper service
+        const scraper = new ScraperService();
+        await scraper.initialize();
+        
+        // Run scrapers based on config constants
+        if (SCRAPER_CONFIG.RUN_HISTORICAL_SCRAPER) {
+            console.log('🚀 Starting historical scraper...');
+            scraper.scrapeHistoricalData()
+                .then(stats => {
+                    console.log('✅ Historical scraping completed:', stats);
+                })
+                .catch(error => {
+                    console.error('❌ Historical scraping failed:', error);
+                });
+        }
+        
+        if (SCRAPER_CONFIG.RUN_UPCOMING_SCRAPER) {
+            console.log('🔄 Starting upcoming scraper...');
+            scraper.scrapeUpcoming()
+                .then(stats => {
+                    console.log('✅ Upcoming scraping completed:', stats);
+                })
+                .catch(error => {
+                    console.error('❌ Upcoming scraping failed:', error);
+                });
+        }
         
         app.use(ApiManager.getInstance().getRouter());
         

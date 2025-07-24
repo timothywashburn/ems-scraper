@@ -2,6 +2,12 @@ import express, { Router, Request, Response, NextFunction, RequestHandler } from
 import { ApiEndpoint, ApiRequest, ApiResponse, AuthType, ErrorCode } from '@/types/api-types';
 import { statusEndpoint } from '@/api/misc/status';
 import { scraperTestEndpoint } from '@/api/misc/scraper-test';
+import { getEventsEndpoint } from '@/api/events/get-events';
+import { getEventByIdEndpoint } from '@/api/events/get-event-by-id';
+import { schedulerStatusEndpoint } from '@/api/scheduler/scheduler-status';
+import { startSchedulerEndpoint } from '@/api/scheduler/start-scheduler';
+import { stopSchedulerEndpoint } from '@/api/scheduler/stop-scheduler';
+import { getViolationsEndpoint } from '@/api/monitor/get-violations';
 
 export default class ApiManager {
     private static instance: ApiManager;
@@ -10,12 +16,26 @@ export default class ApiManager {
     private constructor() {
         this.router = express.Router();
         this.setupMiddleware();
-        this.registerEndpoints();
+        // this.registerEndpoints(); // TODO: Secure endpoints
     }
 
     private registerEndpoints() {
+        // Status endpoints
         this.addEndpoint(statusEndpoint);
         this.addEndpoint(scraperTestEndpoint);
+        
+        // Event data endpoints
+        this.addEndpoint(getEventsEndpoint);
+        this.addEndpoint(getEventByIdEndpoint);
+        
+        // Scheduler endpoints
+        this.addEndpoint(schedulerStatusEndpoint);
+        this.addEndpoint(startSchedulerEndpoint);
+        this.addEndpoint(stopSchedulerEndpoint);
+        
+        // Monitoring endpoints
+        this.addEndpoint(getViolationsEndpoint);
+        
         console.log(`registered api endpoints`);
     }
 

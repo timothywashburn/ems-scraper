@@ -1,6 +1,4 @@
--- UCSD Events Database Schema
--- Based on data analysis of 81,924 events from clubhive validator
--- Only storing the 25 variable properties + metadata
+export const EVENTS_SCHEMA = `
 
 CREATE TABLE IF NOT EXISTS raw_events (
     -- Primary key - perfectly unique across all events
@@ -115,4 +113,4 @@ INSERT INTO raw_constant_fields (field_name, expected_value) VALUES
 ('EventGmtStart', '0001-01-01T00:00:00'),
 ('UserEventEnd', '0001-01-01T00:00:00'),
 ('UserEventStart', '0001-01-01T00:00:00')
-ON DUPLICATE KEY UPDATE expected_value = VALUES(expected_value);
+ON DUPLICATE KEY UPDATE expected_value = VALUES(expected_value);`;

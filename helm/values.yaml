@@ -10,6 +10,7 @@ ingress:
 namespace: "ems-scraper"
 
 mysql:
+  port: "30306"
   storage:
     size: "10Gi"
     storageClass: "local"

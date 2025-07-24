@@ -45,7 +45,7 @@ export class ScraperService {
     for (let attempt = 1; attempt <= retry.maxRetries; attempt++) {
       try {
         console.log(`Getting session (attempt ${attempt}/${retry.maxRetries})...`);
-        
+
         const response = await fetch(`${this.baseUrl}/BrowseEvents.aspx`, {
           headers: {
             'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36',
@@ -72,7 +72,7 @@ export class ScraperService {
 
       } catch (error) {
         console.error(`Session attempt ${attempt} failed:`, error);
-        
+
         if (attempt === retry.maxRetries) {
           throw new Error(`Failed to establish session after ${retry.maxRetries} attempts: ${error}`);
         }
@@ -127,7 +127,7 @@ export class ScraperService {
               },
               {
                 filterName: 'TimeZone',
-                value: '69', // Pacific Time Zone
+                value: '69',
                 displayValue: '',
                 filterType: 2,
               },
@@ -179,30 +179,26 @@ export class ScraperService {
         }
 
         const data: UCSDApiResponse = await response.json();
-        
-        // Parse wrapped response if needed
-        let parsedData = data;
-        if (data.d) {
-          parsedData = JSON.parse(data.d);
-        }
+        let parsedData = JSON.parse(data.d);
+        console.log(parsedData)
 
         const events = parsedData.DailyBookingResults || parsedData.MonthlyBookingResults || [];
         console.log(`Successfully fetched ${events.length} events`);
-        
+
         // Rate limiting delay
         await this.delay(SCRAPER_CONFIG.REQUEST_DELAY_MS);
-        
+
         return events;
 
       } catch (error) {
         console.error(`Fetch attempt ${attempt} failed:`, error);
-        
+
         // Reset session on auth errors
         if (error instanceof Error && (error.message.includes('401') || error.message.includes('403'))) {
           this.csrfToken = '';
           this.cookies = '';
         }
-        
+
         if (attempt === retryConfig.maxRetries) {
           throw new Error(`Failed to fetch events after ${retryConfig.maxRetries} attempts: ${error}`);
         }
@@ -227,7 +223,7 @@ export class ScraperService {
     endDate.setDate(endDate.getDate() + 1);
 
     const allEvents = await this.fetchEventsWithRetry(startDate, endDate);
-    
+
     // Filter events to only include ones that start on the intended date
     // Compare dates as YYYY-MM-DD strings (PST timezone as stored)
     const targetDateStr = date.toISOString().split('T')[0]; // YYYY-MM-DD
@@ -238,7 +234,7 @@ export class ScraperService {
     });
 
     console.log(`Filtered events: ${allEvents.length} total → ${filteredEvents.length} on target date (${targetDateStr})`);
-    
+
     // Check for constant field violations
     const allViolations: string[] = [];
     for (const event of filteredEvents) {
@@ -268,22 +264,22 @@ export class ScraperService {
     };
 
     const currentDate = new Date(startDate);
-    
+
     while (currentDate <= endDate) {
       try {
         console.log(`\n=== Scraping ${currentDate.toISOString().split('T')[0]} ===`);
-        
+
         const result = await this.scrapeDay(currentDate);
         stats.totalEvents += result.events.length;
         stats.violations.push(...result.violations);
-        
+
         if (result.events.length > 0) {
           // Persist events in batches
           const batchResults = await this.eventModel.bulkUpsertEvents(result.events);
           stats.inserted += batchResults.inserted;
           stats.updated += batchResults.updated;
           stats.totalChanges += batchResults.totalChanges;
-          
+
           // In historical mode, stop if any events were updated (they should all be new)
           if (isHistoricalMode && batchResults.updated > 0) {
             console.error(`❌ HISTORICAL SCRAPER STOPPED: Found ${batchResults.updated} existing events that would be updated on ${currentDate.toISOString().split('T')[0]}`);
@@ -291,17 +287,17 @@ export class ScraperService {
             console.error(`Please adjust HISTORICAL_START_DATE in scraper config to start after existing data.`);
             process.exit(1);
           }
-          
+
           console.log(`✓ Processed ${result.events.length} events (${batchResults.inserted} new, ${batchResults.updated} updated, ${batchResults.totalChanges} changes)`);
         } else {
           console.log('✓ No events found for this date');
         }
-        
+
         stats.totalDays++;
-        
+
         // Move to next day
         currentDate.setDate(currentDate.getDate() + 1);
-        
+
       } catch (error) {
         console.error(`Failed to scrape ${currentDate.toISOString().split('T')[0]}:`, error);
         // Continue with next day rather than failing entire operation
@@ -325,7 +321,7 @@ export class ScraperService {
     const startDate = SCRAPER_CONFIG.HISTORICAL_START_DATE;
     const endDate = getHistoricalEndDate();
     console.log(`Date range: ${startDate.toISOString().split('T')[0]} to ${endDate.toISOString().split('T')[0]}`);
-    
+
     const result = await this.scrapeAndPersistDateRange(startDate, endDate, true);
 
     console.log('\n🎉 Historical scraping completed!');

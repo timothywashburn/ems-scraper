@@ -113,26 +113,9 @@ export interface Event {
 
 // API response structure from UCSD
 export interface UCSDApiResponse {
-  d?: string; // Sometimes the response is wrapped in a 'd' property with JSON string
+  d: string;
   DailyBookingResults?: RawEventData[];
   MonthlyBookingResults?: RawEventData[];
-}
-
-// Configuration for scraping requests - moved to /config/scraper-config.ts
-
-// Progress tracking for historical scraping
-export interface ScrapingProgress {
-  id: number;
-  scrape_type: 'historical' | 'routine';
-  start_date: Date;
-  end_date: Date;
-  current_date: Date;
-  status: 'pending' | 'in_progress' | 'completed' | 'failed';
-  events_processed: number;
-  last_checkpoint: Date;
-  error_count: number;
-  created_at: Date;
-  updated_at: Date;
 }
 
 // For monitoring constant fields

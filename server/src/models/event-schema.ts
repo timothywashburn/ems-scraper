@@ -3,6 +3,11 @@ export const EVENT_SCHEMA = `
 CREATE TABLE IF NOT EXISTS raw_events (
     id INT PRIMARY KEY,
     
+    -- Metadata for change tracking
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT 'When first scraped',
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT 'When last modified',
+    last_checked TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT 'Last time we checked this event',
+    
     -- Event details
     event_name VARCHAR(512) NOT NULL COMMENT 'Max observed: 248 chars',
     event_start DATETIME NOT NULL COMMENT 'ISO 8601 format: YYYY-MM-DDTHH:mm:ss',
@@ -11,8 +16,8 @@ CREATE TABLE IF NOT EXISTS raw_events (
     gmt_end DATETIME NOT NULL,
     time_booking_start DATETIME NOT NULL COMMENT 'Booking time window',
     time_booking_end DATETIME NOT NULL,
-    is_all_day_event BOOLEAN NOT NULL DEFAULT FALSE,
-    timezone_abbreviation VARCHAR(255) NOT NULL DEFAULT 'PT' COMMENT 'PT or MT observed',
+    is_all_day_event BOOLEAN NOT NULL,
+    timezone_abbreviation VARCHAR(255) NOT NULL COMMENT 'PT or MT observed',
     
     -- Location details
     building VARCHAR(255) NOT NULL COMMENT 'Max observed: 19 chars',
@@ -33,11 +38,7 @@ CREATE TABLE IF NOT EXISTS raw_events (
     -- Status tracking
     status_id INT NOT NULL COMMENT 'Range: 1 to 791, 5 unique values',
     status_type_id INT NOT NULL COMMENT 'Range: -14 to -11, 2 unique values',
-    web_user_is_owner BOOLEAN NOT NULL DEFAULT FALSE,
-    
-    -- Metadata for change tracking
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT 'When first scraped',
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT 'When last modified',
+    web_user_is_owner BOOLEAN NOT NULL,
     
     -- Indexes for common queries
     INDEX idx_event_start (event_start),

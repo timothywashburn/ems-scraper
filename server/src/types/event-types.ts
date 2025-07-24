@@ -83,6 +83,9 @@ export interface RawEventData {
 // Cleaned event data we actually store in database
 export interface Event {
   id: number;
+  created_at: Date;
+  updated_at: Date;
+  last_checked: Date;
   event_name: string;
   event_start: Date;
   event_end: Date;
@@ -107,8 +110,6 @@ export interface Event {
   status_id: number;
   status_type_id: number;
   web_user_is_owner: boolean;
-  created_at: Date;
-  updated_at: Date;
 }
 
 // API response structure from UCSD

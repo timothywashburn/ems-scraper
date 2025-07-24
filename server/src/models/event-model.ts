@@ -10,7 +10,7 @@ export class EventModel {
   }
 
   // Transform raw API data to database format
-  private transformRawEvent(raw: RawEventData): Omit<Event, 'created_at' | 'updated_at'> {
+  private transformRawEvent(raw: RawEventData): Omit<Event, 'created_at' | 'updated_at' | 'last_checked'> {
     return {
       id: raw.Id,
       event_name: raw.EventName,
@@ -43,19 +43,22 @@ export class EventModel {
   // Insert new event
   async insertEvent(rawEvent: RawEventData): Promise<void> {
     const event = this.transformRawEvent(rawEvent);
+    const now = new Date();
     
     const sql = `
       INSERT INTO raw_events (
-        id, event_name, event_start, event_end, gmt_start, gmt_end,
+        id, created_at, updated_at, last_checked,
+        event_name, event_start, event_end, gmt_start, gmt_end,
         time_booking_start, time_booking_end, is_all_day_event, timezone_abbreviation,
         building, building_id, room, room_id, room_code, room_type, room_type_id,
         location, location_link, group_name, reservation_id, reservation_summary_url,
         status_id, status_type_id, web_user_is_owner
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
 
     const values = [
-      event.id, event.event_name, event.event_start, event.event_end,
+      event.id, now, now, now,
+      event.event_name, event.event_start, event.event_end,
       event.gmt_start, event.gmt_end, event.time_booking_start, event.time_booking_end,
       event.is_all_day_event, event.timezone_abbreviation, event.building, event.building_id,
       event.room, event.room_id, event.room_code, event.room_type, event.room_type_id,
@@ -84,7 +87,7 @@ export class EventModel {
     const changes: EventChanges['changes'] = [];
 
     // Compare all fields except metadata
-    const fieldsToCompare: (keyof Omit<Event, 'created_at' | 'updated_at'>)[] = [
+    const fieldsToCompare: (keyof Omit<Event, 'created_at' | 'updated_at' | 'last_checked'>)[] = [
       'id', 'event_name', 'event_start', 'event_end', 'gmt_start', 'gmt_end',
       'time_booking_start', 'time_booking_end', 'is_all_day_event', 'timezone_abbreviation',
       'building', 'building_id', 'room', 'room_id', 'room_code', 'room_type', 'room_type_id',
@@ -112,13 +115,14 @@ export class EventModel {
     }
 
     // Update the event
+    const now = new Date();
     const sql = `
       UPDATE raw_events SET
         event_name = ?, event_start = ?, event_end = ?, gmt_start = ?, gmt_end = ?,
         time_booking_start = ?, time_booking_end = ?, is_all_day_event = ?, timezone_abbreviation = ?,
         building = ?, building_id = ?, room = ?, room_id = ?, room_code = ?, room_type = ?, room_type_id = ?,
         location = ?, location_link = ?, group_name = ?, reservation_id = ?, reservation_summary_url = ?,
-        status_id = ?, status_type_id = ?, web_user_is_owner = ?, updated_at = CURRENT_TIMESTAMP
+        status_id = ?, status_type_id = ?, web_user_is_owner = ?, updated_at = ?, last_checked = ?
       WHERE id = ?
     `;
 
@@ -129,7 +133,7 @@ export class EventModel {
       newEvent.room, newEvent.room_id, newEvent.room_code, newEvent.room_type, newEvent.room_type_id,
       newEvent.location, newEvent.location_link, newEvent.group_name, newEvent.reservation_id,
       newEvent.reservation_summary_url, newEvent.status_id, newEvent.status_type_id, 
-      newEvent.web_user_is_owner, newEvent.id
+      newEvent.web_user_is_owner, now, now, newEvent.id
     ];
 
     await this.db.query(sql, values);
@@ -234,6 +238,16 @@ export class EventModel {
     return await this.db.query<Event>(sql, [buildingId]);
   }
 
+  // Update last_checked timestamp for events (without affecting updated_at)
+  async updateLastChecked(eventIds: number[]): Promise<void> {
+    if (eventIds.length === 0) return;
+    
+    const placeholders = eventIds.map(() => '?').join(',');
+    const sql = `UPDATE raw_events SET last_checked = ? WHERE id IN (${placeholders})`;
+    const values = [new Date(), ...eventIds];
+    
+    await this.db.query(sql, values);
+  }
 
   // Initialize database schema
   async initializeSchema(): Promise<void> {

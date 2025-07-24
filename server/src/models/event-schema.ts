@@ -4,7 +4,7 @@ CREATE TABLE IF NOT EXISTS raw_events (
     id INT PRIMARY KEY,
     
     -- Event details
-    event_name VARCHAR(500) NOT NULL COMMENT 'Max observed: 248 chars',
+    event_name VARCHAR(512) NOT NULL COMMENT 'Max observed: 248 chars',
     event_start DATETIME NOT NULL COMMENT 'ISO 8601 format: YYYY-MM-DDTHH:mm:ss',
     event_end DATETIME NOT NULL,
     gmt_start DATETIME NOT NULL COMMENT 'GMT timezone version',
@@ -12,21 +12,21 @@ CREATE TABLE IF NOT EXISTS raw_events (
     time_booking_start DATETIME NOT NULL COMMENT 'Booking time window',
     time_booking_end DATETIME NOT NULL,
     is_all_day_event BOOLEAN NOT NULL DEFAULT FALSE,
-    timezone_abbreviation VARCHAR(10) NOT NULL DEFAULT 'PT' COMMENT 'PT or MT observed',
+    timezone_abbreviation VARCHAR(255) NOT NULL DEFAULT 'PT' COMMENT 'PT or MT observed',
     
     -- Location details
-    building VARCHAR(50) NOT NULL COMMENT 'Max observed: 19 chars',
+    building VARCHAR(255) NOT NULL COMMENT 'Max observed: 19 chars',
     building_id INT NOT NULL COMMENT 'Range: -10 to 220',
-    room VARCHAR(100) NOT NULL COMMENT 'Max observed: 46 chars', 
+    room VARCHAR(255) NOT NULL COMMENT 'Max observed: 46 chars', 
     room_id INT NOT NULL COMMENT 'Range: -10 to 1364',
-    room_code VARCHAR(50) NOT NULL COMMENT 'Max observed: 25 chars',
-    room_type VARCHAR(50) NOT NULL COMMENT 'Max observed: 28 chars',
+    room_code VARCHAR(255) NOT NULL COMMENT 'Max observed: 25 chars',
+    room_type VARCHAR(255) NOT NULL COMMENT 'Max observed: 28 chars',
     room_type_id INT NOT NULL COMMENT 'Range: 0 to 743',
-    location VARCHAR(150) NOT NULL COMMENT 'Full location string, max: 61 chars',
+    location VARCHAR(255) NOT NULL COMMENT 'Full location string, max: 61 chars',
     location_link VARCHAR(255) NOT NULL COMMENT 'URL path, max: 113 chars',
     
     -- Organization details  
-    group_name VARCHAR(150) NOT NULL COMMENT 'Max observed: 56 chars',
+    group_name VARCHAR(255) NOT NULL COMMENT 'Max observed: 56 chars',
     reservation_id INT NOT NULL COMMENT 'Range: 2391 to 246738, 30779 unique values',
     reservation_summary_url VARCHAR(255) NOT NULL COMMENT 'URL path, max: 82 chars',
     
@@ -53,7 +53,7 @@ CREATE TABLE IF NOT EXISTS raw_events (
 -- Table to store expected constant field values for monitoring
 CREATE TABLE IF NOT EXISTS raw_constant_fields (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    field_name VARCHAR(100) NOT NULL,
+    field_name VARCHAR(255) NOT NULL,
     expected_value TEXT NOT NULL,
     
     UNIQUE KEY unique_field (field_name)
@@ -63,7 +63,7 @@ CREATE TABLE IF NOT EXISTS raw_constant_fields (
 CREATE TABLE IF NOT EXISTS raw_constant_violations (
     id INT AUTO_INCREMENT PRIMARY KEY,
     event_id INT NOT NULL,
-    field_name VARCHAR(100) NOT NULL,
+    field_name VARCHAR(255) NOT NULL,
     expected_value TEXT NOT NULL,
     actual_value TEXT NOT NULL,
     violation_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,

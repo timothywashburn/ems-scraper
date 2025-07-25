@@ -20,12 +20,12 @@ CREATE TABLE `raw_events` (
     `updated_at` TIMESTAMP(0) NULL DEFAULT CURRENT_TIMESTAMP(0),
     `last_checked` TIMESTAMP(0) NULL DEFAULT CURRENT_TIMESTAMP(0),
     `event_name` VARCHAR(512) NOT NULL,
-    `event_start` DATETIME(0) NOT NULL,
-    `event_end` DATETIME(0) NOT NULL,
-    `gmt_start` DATETIME(0) NOT NULL,
-    `gmt_end` DATETIME(0) NOT NULL,
-    `time_booking_start` DATETIME(0) NOT NULL,
-    `time_booking_end` DATETIME(0) NOT NULL,
+    `event_start` VARCHAR(19) NOT NULL,
+    `event_end` VARCHAR(19) NOT NULL,
+    `gmt_start` VARCHAR(19) NOT NULL,
+    `gmt_end` VARCHAR(19) NOT NULL,
+    `time_booking_start` VARCHAR(19) NOT NULL,
+    `time_booking_end` VARCHAR(19) NOT NULL,
     `is_all_day_event` BOOLEAN NOT NULL,
     `timezone_abbreviation` VARCHAR(255) NOT NULL,
     `building` VARCHAR(255) NOT NULL,
@@ -52,5 +52,31 @@ CREATE TABLE `raw_events` (
     INDEX `idx_location_search`(`building`, `room`),
     INDEX `idx_reservation_id`(`reservation_id`),
     INDEX `idx_room_id`(`room_id`),
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
+CREATE TABLE `api_tokens` (
+    `id` INTEGER NOT NULL AUTO_INCREMENT,
+    `token` VARCHAR(255) NOT NULL,
+    `is_admin` BOOLEAN NOT NULL DEFAULT false,
+    `comment` VARCHAR(255) NOT NULL,
+    `created_at` TIMESTAMP(0) NOT NULL DEFAULT CURRENT_TIMESTAMP(0),
+    `last_used` TIMESTAMP(0) NULL,
+
+    UNIQUE INDEX `api_tokens_token_key`(`token`),
+    INDEX `idx_token`(`token`),
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
+CREATE TABLE `scraper_state` (
+    `id` INTEGER NOT NULL AUTO_INCREMENT,
+    `scraper_type` VARCHAR(50) NOT NULL,
+    `current_date` DATE NOT NULL,
+    `updated_at` TIMESTAMP(0) NOT NULL DEFAULT CURRENT_TIMESTAMP(0),
+
+    UNIQUE INDEX `scraper_state_scraper_type_key`(`scraper_type`),
+    INDEX `idx_scraper_type`(`scraper_type`),
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;

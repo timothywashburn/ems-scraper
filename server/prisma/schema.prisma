@@ -62,12 +62,12 @@ model raw_events {
 }
 
 model api_tokens {
-  id           Int       @id @default(autoincrement())
-  token        String    @unique @db.VarChar(255)
-  is_admin     Boolean   @default(false)
-  comment      String    @db.VarChar(255)
-  created_at   DateTime  @default(now()) @db.Timestamp(0)
-  last_used    DateTime? @db.Timestamp(0)
+  id         Int       @id @default(autoincrement())
+  token      String    @unique @db.VarChar(255)
+  is_admin   Boolean   @default(false)
+  comment    String    @db.VarChar(255)
+  created_at DateTime  @default(now()) @db.Timestamp(0)
+  last_used  DateTime? @db.Timestamp(0)
 
   @@index([token], map: "idx_token")
 }
@@ -80,4 +80,3 @@ model scraper_state {
 
   @@index([scraper_type], map: "idx_scraper_type")
 }
-

@@ -8,11 +8,9 @@
     "dev": "npx tsx watch src/server.ts",
     "start": "node dist/server.js",
     "prisma:generate": "prisma generate",
-    "db:migrate:dev": "dotenv -e .env.development -e .env.development.local -- prisma migrate dev",
-    "db:studio:dev": "dotenv -e .env.development -e .env.development.local -- prisma studio",
-    "db:reset:dev": "dotenv -e .env.development -e .env.development.local -- prisma migrate reset",
-    "db:migrate:prod": "dotenv -e .env.production -e .env.production.local -- prisma migrate deploy",
-    "db:studio:prod": "dotenv -e .env.production -e .env.production.local -- prisma studio"
+    "db:reset:dev": "dotenv -c development -- prisma migrate reset",
+    "db:migrate:dev": "dotenv -c development -- prisma migrate dev",
+    "db:migrate:prod": "dotenv -c production -- prisma migrate deploy"
   },
   "dependencies": {
     "@prisma/client": "^6.12.0",

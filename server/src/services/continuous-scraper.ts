@@ -64,14 +64,24 @@ export class ContinuousScraper extends ScraperClient {
       console.log(`   ${String(change.field)}: ${JSON.stringify(change.oldValue)} → ${JSON.stringify(change.newValue)}`);
     }
   }
+
+  private async getEventsForDate(date: Date): Promise<any[]> {
+    return await this.eventModel.getEventsForDate(date);
+  }
+
   private async scrapeEvents(date: Date): Promise<void> {
     try {
       const isDryRun = CONTINUOUS_SCRAPER_CONFIG.CONTINUOUS_SCRAPER_DRY_RUN;
       const dateStr = date.toISOString().split('T')[0];
       console.log(`\n=== Continuous scraping ${dateStr}${isDryRun ? ' (DRY RUN)' : ''} ===`);
 
+      // Get events that were previously found for this date
+      const previouslyFoundEvents = await this.getEventsForDate(date);
+      const previousEventIds = new Set(previouslyFoundEvents.map(e => e.id));
+
       const result = await this.scrapeDay(date);
       const eventCount = result.events.length;
+      const currentEventIds = new Set(result.events.map(e => e.Id));
 
       if (eventCount > 0) {
         const processResults = await this.processEvents(result.events, isDryRun);
@@ -89,6 +99,31 @@ export class ContinuousScraper extends ScraperClient {
         }
       } else {
         console.log('✓ No events found for this date');
+      }
+
+      // Handle events that are no longer found
+      const noLongerFoundIds = Array.from(previousEventIds).filter(id => !currentEventIds.has(id));
+      const foundAgainIds = Array.from(currentEventIds).filter(id => {
+        const previousEvent = previouslyFoundEvents.find(e => e.id === id);
+        return previousEvent && previousEvent.no_longer_found_at !== null;
+      });
+
+      if (noLongerFoundIds.length > 0) {
+        if (isDryRun) {
+          console.log(`🔍 DRY RUN: Would mark ${noLongerFoundIds.length} events as no longer found: [${noLongerFoundIds.join(', ')}]`);
+        } else {
+          await this.eventModel.markEventsNoLongerFound(noLongerFoundIds);
+          console.log(`❌ Marked ${noLongerFoundIds.length} events as no longer found: [${noLongerFoundIds.join(', ')}]`);
+        }
+      }
+
+      if (foundAgainIds.length > 0) {
+        if (isDryRun) {
+          console.log(`🔍 DRY RUN: Would clear no-longer-found status for ${foundAgainIds.length} events: [${foundAgainIds.join(', ')}]`);
+        } else {
+          await this.eventModel.clearNoLongerFound(foundAgainIds);
+          console.log(`✅ Cleared no-longer-found status for ${foundAgainIds.length} events: [${foundAgainIds.join(', ')}]`);
+        }
       }
 
       if (!isDryRun) {

@@ -47,7 +47,7 @@ export class EventModel {
   constructor() {}
 
   // Transform raw API data to database format - store dates as raw strings
-  private transformRawEvent(raw: RawEventData): Omit<raw_events, 'created_at' | 'updated_at' | 'last_checked'> {
+  private transformRawEvent(raw: RawEventData): Omit<raw_events, 'created_at' | 'updated_at' | 'last_checked' | 'no_longer_found_at'> {
     return {
       id: raw.Id,
       event_name: raw.EventName,
@@ -105,7 +105,7 @@ export class EventModel {
     const changes: EventChanges['changes'] = [];
 
     // Compare all fields except metadata
-    const fieldsToCompare: (keyof Omit<raw_events, 'created_at' | 'updated_at' | 'last_checked'>)[] = [
+    const fieldsToCompare: (keyof Omit<raw_events, 'created_at' | 'updated_at' | 'last_checked' | 'no_longer_found_at'>)[] = [
       'id', 'event_name', 'event_start', 'event_end', 'gmt_start', 'gmt_end',
       'time_booking_start', 'time_booking_end', 'is_all_day_event', 'timezone_abbreviation',
       'building', 'building_id', 'room', 'room_id', 'room_code', 'room_type', 'room_type_id',
@@ -249,6 +249,62 @@ export class EventModel {
       },
       data: {
         last_checked: new Date()
+      }
+    });
+  }
+
+  // Mark events as no longer found on their scheduled day
+  async markEventsNoLongerFound(eventIds: number[]): Promise<void> {
+    if (eventIds.length === 0) return;
+    
+    const now = new Date();
+    await prisma.raw_events.updateMany({
+      where: {
+        id: {
+          in: eventIds
+        }
+      },
+      data: {
+        no_longer_found_at: now,
+        last_checked: now
+      }
+    });
+  }
+
+  // Clear the no_longer_found_at timestamp when event is found again
+  async clearNoLongerFound(eventIds: number[]): Promise<void> {
+    if (eventIds.length === 0) return;
+    
+    await prisma.raw_events.updateMany({
+      where: {
+        id: {
+          in: eventIds
+        }
+      },
+      data: {
+        no_longer_found_at: null,
+        last_checked: new Date()
+      }
+    });
+  }
+
+  // Get events for a specific date
+  async getEventsForDate(date: Date): Promise<{id: number; no_longer_found_at: Date | null}[]> {
+    const dateStr = date.toISOString().split('T')[0];
+    const nextDay = new Date(date);
+    nextDay.setDate(nextDay.getDate() + 1);
+    const nextDayStr = nextDay.toISOString().split('T')[0];
+
+    return await prisma.raw_events.findMany({
+      where: {
+        event_start: {
+          gte: dateStr,
+          lt: nextDayStr
+        }
+      },
+      select: {
+        id: true,
+        no_longer_found_at: true
       }
     });
   }

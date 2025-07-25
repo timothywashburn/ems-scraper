@@ -237,33 +237,6 @@ export class EventModel {
     return violations;
   }
 
-  // Get events by date range
-  async getEventsByDateRange(startDate: Date, endDate: Date): Promise<raw_events[]> {
-    return await prisma.raw_events.findMany({
-      where: {
-        event_start: {
-          gte: startDate,
-          lte: endDate
-        }
-      },
-      orderBy: {
-        event_start: 'asc'
-      }
-    });
-  }
-
-  // Get events by building
-  async getEventsByBuilding(buildingId: number): Promise<raw_events[]> {
-    return await prisma.raw_events.findMany({
-      where: {
-        building_id: buildingId
-      },
-      orderBy: {
-        event_start: 'asc'
-      }
-    });
-  }
-
   // Update last_checked timestamp for events (without affecting updated_at)
   async updateLastChecked(eventIds: number[]): Promise<void> {
     if (eventIds.length === 0) return;

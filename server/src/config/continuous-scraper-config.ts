@@ -4,10 +4,10 @@ export const CONTINUOUS_SCRAPER_CONFIG = {
   RUN_CONTINUOUS_SCRAPER: true,
   
   // Dry run mode
-  CONTINUOUS_SCRAPER_DRY_RUN: true,
+  CONTINUOUS_SCRAPER_DRY_RUN: false,
   
   // Rate limiting settings (can be overridden per scraper)
-  REQUEST_DELAY_MS: 5000,
+  REQUEST_DELAY_MS: 1000,
   MIN_REQUEST_DELAY_MS: 1000,
   MAX_RETRIES: 8,
   EXPONENTIAL_BACKOFF_BASE: 1.5,

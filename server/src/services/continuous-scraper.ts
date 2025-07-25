@@ -17,7 +17,7 @@ export class ContinuousScraper extends ScraperClient {
     this.scraperStateModel = new ScraperStateModel();
   }
 
-  private async processEventsWithDetailedLogging(events: RawEventData[]): Promise<{
+  private async processEvents(events: RawEventData[], isDryRun: boolean): Promise<{
     inserted: number;
     updated: number;
     totalChanges: number;
@@ -27,51 +27,63 @@ export class ContinuousScraper extends ScraperClient {
     let totalChanges = 0;
 
     for (const event of events) {
-      const result = await this.eventModel.upsertEvent(event);
-      if (result.action === 'inserted') {
-        inserted++;
-      } else {
-        updated++;
-        if (result.changes && result.changes.changes.length > 0) {
-          console.log(`🔄 Event ${event.Id} changed (${result.changes.changes.length} fields):`);
-          for (const change of result.changes.changes) {
-            console.log(`   ${String(change.field)}: ${JSON.stringify(change.oldValue)} → ${JSON.stringify(change.newValue)}`);
+      if (isDryRun) {
+        const existingEvent = await this.eventModel.getEventById(event.Id);
+        if (existingEvent) {
+          const changes = await this.eventModel.detectChanges(event, existingEvent);
+          if (changes && changes.changes.length > 0) {
+            console.log(`🔍 DRY RUN: Event ${event.Id} would have ${changes.changes.length} changes:`);
+            this.logEventChanges(changes.changes);
+            totalChanges += changes.changeCount;
+            updated++;
           }
-          totalChanges += result.changes.changeCount;
+        } else {
+          console.log(`🔍 DRY RUN: Event ${event.Id} would be inserted (new)`);
+          inserted++;
+        }
+      } else {
+        const result = await this.eventModel.upsertEvent(event);
+        if (result.action === 'inserted') {
+          inserted++;
+        } else {
+          updated++;
+          if (result.changes && result.changes.changes.length > 0) {
+            console.log(`🔄 Event ${event.Id} changed (${result.changes.changes.length} fields):`);
+            this.logEventChanges(result.changes.changes);
+            totalChanges += result.changes.changeCount;
+          }
         }
       }
     }
 
     return { inserted, updated, totalChanges };
   }
+
+  private logEventChanges(changes: any[]): void {
+    for (const change of changes) {
+      console.log(`   ${String(change.field)}: ${JSON.stringify(change.oldValue)} → ${JSON.stringify(change.newValue)}`);
+    }
+  }
   private async scrapeEvents(date: Date): Promise<void> {
     try {
       const isDryRun = CONTINUOUS_SCRAPER_CONFIG.CONTINUOUS_SCRAPER_DRY_RUN;
-      console.log(`\n=== Continuous scraping ${date.toISOString().split('T')[0]}${isDryRun ? ' (DRY RUN)' : ''} ===`);
+      const dateStr = date.toISOString().split('T')[0];
+      console.log(`\n=== Continuous scraping ${dateStr}${isDryRun ? ' (DRY RUN)' : ''} ===`);
 
       const result = await this.scrapeDay(date);
+      const eventCount = result.events.length;
 
-      if (result.events.length > 0) {
-        if (isDryRun) {
-          console.log(`🔍 DRY RUN: Would process ${result.events.length} events (no database changes made)`);
-          // In dry run, still check what would change
-          for (const event of result.events) {
-            const existingEvent = await this.eventModel.getEventById(event.Id);
-            if (existingEvent) {
-              const changes = await this.eventModel.detectChanges(event, existingEvent);
-              if (changes && changes.changes.length > 0) {
-                console.log(`🔍 DRY RUN: Event ${event.Id} would have ${changes.changes.length} changes:`);
-                for (const change of changes.changes) {
-                  console.log(`   ${String(change.field)}: ${JSON.stringify(change.oldValue)} → ${JSON.stringify(change.newValue)}`);
-                }
-              }
-            }
-          }
-        } else {
-          const detailedResults = await this.processEventsWithDetailedLogging(result.events);
-          console.log(`✓ Processed ${result.events.length} events (${detailedResults.inserted} new, ${detailedResults.updated} updated, ${detailedResults.totalChanges} changes)`);
-          
-          // Update last_checked for all events (metadata update)
+      if (eventCount > 0) {
+        const processResults = await this.processEvents(result.events, isDryRun);
+        
+        const modePrefix = isDryRun ? '🔍 DRY RUN: Processed' : '✓ Processed';
+        const changesSummary = processResults.totalChanges > 0 ? 
+          `(${processResults.inserted} new, ${processResults.updated} updated, ${processResults.totalChanges} changes)` :
+          `(${processResults.inserted} new, ${processResults.updated} updated, no changes)`;
+        
+        console.log(`${modePrefix} ${eventCount} events ${changesSummary}`);
+        
+        if (!isDryRun) {
           const eventIds = result.events.map(e => e.Id);
           await this.eventModel.updateLastChecked(eventIds);
         }
@@ -82,7 +94,7 @@ export class ContinuousScraper extends ScraperClient {
       if (!isDryRun) {
         await this.scraperStateModel.updateScraperState(this.SCRAPER_TYPE, date);
       } else {
-        console.log(`🔍 DRY RUN: Would update scraper state to ${date.toISOString().split('T')[0]}`);
+        console.log(`🔍 DRY RUN: Would update scraper state to ${dateStr}`);
       }
 
     } catch (error) {

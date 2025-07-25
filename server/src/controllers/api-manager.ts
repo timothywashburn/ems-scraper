@@ -2,8 +2,6 @@ import express, { Router, Request, Response, NextFunction, RequestHandler } from
 import { ApiEndpoint, ApiRequest, ApiResponse, AuthType, ErrorCode } from '@/types/api-types';
 import { statusEndpoint } from '@/api/misc/status';
 import { scraperTestEndpoint } from '@/api/misc/scraper-test';
-import { getEventsEndpoint } from '@/api/events/get-events';
-import { getEventByIdEndpoint } from '@/api/events/get-event-by-id';
 import { schedulerStatusEndpoint } from '@/api/scheduler/scheduler-status';
 import { startSchedulerEndpoint } from '@/api/scheduler/start-scheduler';
 import { stopSchedulerEndpoint } from '@/api/scheduler/stop-scheduler';
@@ -23,10 +21,6 @@ export default class ApiManager {
         // Status endpoints
         this.addEndpoint(statusEndpoint);
         this.addEndpoint(scraperTestEndpoint);
-        
-        // Event data endpoints
-        this.addEndpoint(getEventsEndpoint);
-        this.addEndpoint(getEventByIdEndpoint);
         
         // Scheduler endpoints
         this.addEndpoint(schedulerStatusEndpoint);

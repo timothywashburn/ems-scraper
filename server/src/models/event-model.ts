@@ -1,16 +1,53 @@
-import DatabaseManager from '@/controllers/database-manager';
+import { prisma } from '@/lib/prisma';
 import { Event, RawEventData, EventChanges } from '@/types/event-types';
-import { EVENT_SCHEMA } from './event-schema';
+import { raw_events } from '@prisma/client';
+
+// Expected constant field values for monitoring
+const EXPECTED_CONSTANTS: Record<string, string> = {
+  'AllowCancel': 'false',
+  'AllowCancelPamInstance': 'false',
+  'AllowEdit': 'false',
+  'AllowEndNow': 'false',
+  'CanCheckIn': 'false',
+  'ChangeHost': 'false',
+  'CheckInMinutes': '0',
+  'DefaultCancelReason': '0',
+  'EventCount': '0',
+  'FloorID': '0',
+  'GroupId': '0',
+  'HasServices': 'false',
+  'ImageHeight': '0',
+  'ImageId': '0',
+  'ImageWidth': '0',
+  'InternalId': '0',
+  'IsCalendaringEnabled': 'false',
+  'IsCheckedIn': 'false',
+  'IsHoliday': 'false',
+  'IsSkypeEnabled': 'false',
+  'IsTeamsEnabled': 'false',
+  'IsWebexEnabled': 'false',
+  'IsZoomEnabled': 'false',
+  'OccurrenceCount': '0',
+  'RequiresCancelReason': 'false',
+  'RequiresCheckIn': 'false',
+  'ReserveType': '0',
+  'ShowAddServices': 'false',
+  'ShowCheckinButton': 'false',
+  'ShowFloorMap': 'false',
+  'StatusType': '0',
+  'TotalNumberOfBookings': '0',
+  'VideoConferenceHost': 'false',
+  'EventGmtEnd': '0001-01-01T00:00:00',
+  'EventGmtStart': '0001-01-01T00:00:00',
+  'UserEventEnd': '0001-01-01T00:00:00',
+  'UserEventStart': '0001-01-01T00:00:00'
+} as const;
 
 export class EventModel {
-  private db: DatabaseManager;
-
-  constructor() {
-    this.db = DatabaseManager.getInstance();
-  }
+  constructor() {}
 
   // Transform raw API data to database format
-  private transformRawEvent(raw: RawEventData): Omit<Event, 'created_at' | 'updated_at' | 'last_checked'> {
+  private transformRawEvent(raw: RawEventData): Omit<raw_events, 'created_at' | 'updated_at' | 'last_checked'> {
     return {
       id: raw.Id,
       event_name: raw.EventName,
@@ -45,35 +82,21 @@ export class EventModel {
     const event = this.transformRawEvent(rawEvent);
     const now = new Date();
     
-    const sql = `
-      INSERT INTO raw_events (
-        id, created_at, updated_at, last_checked,
-        event_name, event_start, event_end, gmt_start, gmt_end,
-        time_booking_start, time_booking_end, is_all_day_event, timezone_abbreviation,
-        building, building_id, room, room_id, room_code, room_type, room_type_id,
-        location, location_link, group_name, reservation_id, reservation_summary_url,
-        status_id, status_type_id, web_user_is_owner
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `;
-
-    const values = [
-      event.id, now, now, now,
-      event.event_name, event.event_start, event.event_end,
-      event.gmt_start, event.gmt_end, event.time_booking_start, event.time_booking_end,
-      event.is_all_day_event, event.timezone_abbreviation, event.building, event.building_id,
-      event.room, event.room_id, event.room_code, event.room_type, event.room_type_id,
-      event.location, event.location_link, event.group_name, event.reservation_id,
-      event.reservation_summary_url, event.status_id, event.status_type_id, event.web_user_is_owner
-    ];
-
-    await this.db.query(sql, values);
+    await prisma.raw_events.create({
+      data: {
+        ...event,
+        created_at: now,
+        updated_at: now,
+        last_checked: now
+      }
+    });
   }
 
   // Check if event exists and get current data
-  async getEventById(id: number): Promise<Event | null> {
-    const sql = 'SELECT * FROM raw_events WHERE id = ?';
-    const results = await this.db.query<Event>(sql, [id]);
-    return results.length > 0 ? results[0] : null;
+  async getEventById(id: number): Promise<raw_events | null> {
+    return await prisma.raw_events.findUnique({
+      where: { id }
+    });
   }
 
   // Update existing event and detect changes
@@ -87,7 +110,7 @@ export class EventModel {
     const changes: EventChanges['changes'] = [];
 
     // Compare all fields except metadata
-    const fieldsToCompare: (keyof Omit<Event, 'created_at' | 'updated_at' | 'last_checked'>)[] = [
+    const fieldsToCompare: (keyof Omit<raw_events, 'created_at' | 'updated_at' | 'last_checked'>)[] = [
       'id', 'event_name', 'event_start', 'event_end', 'gmt_start', 'gmt_end',
       'time_booking_start', 'time_booking_end', 'is_all_day_event', 'timezone_abbreviation',
       'building', 'building_id', 'room', 'room_id', 'room_code', 'room_type', 'room_type_id',
@@ -116,27 +139,14 @@ export class EventModel {
 
     // Update the event
     const now = new Date();
-    const sql = `
-      UPDATE raw_events SET
-        event_name = ?, event_start = ?, event_end = ?, gmt_start = ?, gmt_end = ?,
-        time_booking_start = ?, time_booking_end = ?, is_all_day_event = ?, timezone_abbreviation = ?,
-        building = ?, building_id = ?, room = ?, room_id = ?, room_code = ?, room_type = ?, room_type_id = ?,
-        location = ?, location_link = ?, group_name = ?, reservation_id = ?, reservation_summary_url = ?,
-        status_id = ?, status_type_id = ?, web_user_is_owner = ?, updated_at = ?, last_checked = ?
-      WHERE id = ?
-    `;
-
-    const values = [
-      newEvent.event_name, newEvent.event_start, newEvent.event_end,
-      newEvent.gmt_start, newEvent.gmt_end, newEvent.time_booking_start, newEvent.time_booking_end,
-      newEvent.is_all_day_event, newEvent.timezone_abbreviation, newEvent.building, newEvent.building_id,
-      newEvent.room, newEvent.room_id, newEvent.room_code, newEvent.room_type, newEvent.room_type_id,
-      newEvent.location, newEvent.location_link, newEvent.group_name, newEvent.reservation_id,
-      newEvent.reservation_summary_url, newEvent.status_id, newEvent.status_type_id, 
-      newEvent.web_user_is_owner, now, now, newEvent.id
-    ];
-
-    await this.db.query(sql, values);
+    await prisma.raw_events.update({
+      where: { id: newEvent.id },
+      data: {
+        ...newEvent,
+        updated_at: now,
+        last_checked: now
+      }
+    });
 
     return {
       eventId: rawEvent.Id,
@@ -186,36 +196,32 @@ export class EventModel {
   // Monitor constant fields for violations and log them
   async checkConstantFields(rawEvent: RawEventData): Promise<string[]> {
     const violations: string[] = [];
-    
-    // Fetch expected constant values from database
-    const constantFields = await this.db.query<{ field_name: string; expected_value: string }>(
-      'SELECT field_name, expected_value FROM raw_constant_fields'
-    );
 
-    for (const constantField of constantFields) {
-      const fieldName = constantField.field_name;
-      
+    for (const [fieldName, expectedValue] of Object.entries(EXPECTED_CONSTANTS)) {
       // Safely parse expected value - handle both JSON strings and primitive values
-      let expectedValue: any;
+      let parsedExpectedValue: any;
       try {
-        expectedValue = JSON.parse(constantField.expected_value);
+        parsedExpectedValue = JSON.parse(expectedValue);
       } catch (error) {
         // If JSON.parse fails, treat as primitive value
-        expectedValue = constantField.expected_value;
+        parsedExpectedValue = expectedValue;
       }
       
       const actualValue = (rawEvent as any)[fieldName];
 
-      if (actualValue !== expectedValue) {
-        const violationMsg = `${fieldName}: expected ${expectedValue}, got ${actualValue}`;
+      if (actualValue !== parsedExpectedValue) {
+        const violationMsg = `${fieldName}: expected ${parsedExpectedValue}, got ${actualValue}`;
         violations.push(violationMsg);
         
         // Log the violation to raw_constant_violations table
-        await this.db.query(
-          `INSERT INTO raw_constant_violations (event_id, field_name, expected_value, actual_value) 
-           VALUES (?, ?, ?, ?)`,
-          [rawEvent.Id, fieldName, JSON.stringify(expectedValue), JSON.stringify(actualValue)]
-        );
+        await prisma.raw_constant_violations.create({
+          data: {
+            event_id: rawEvent.Id,
+            field_name: fieldName,
+            expected_value: JSON.stringify(parsedExpectedValue),
+            actual_value: JSON.stringify(actualValue)
+          }
+        });
       }
     }
 
@@ -223,38 +229,52 @@ export class EventModel {
   }
 
   // Get events by date range
-  async getEventsByDateRange(startDate: Date, endDate: Date): Promise<Event[]> {
-    const sql = `
-      SELECT * FROM raw_events 
-      WHERE event_start >= ? AND event_start <= ?
-      ORDER BY event_start ASC
-    `;
-    return await this.db.query<Event>(sql, [startDate, endDate]);
+  async getEventsByDateRange(startDate: Date, endDate: Date): Promise<raw_events[]> {
+    return await prisma.raw_events.findMany({
+      where: {
+        event_start: {
+          gte: startDate,
+          lte: endDate
+        }
+      },
+      orderBy: {
+        event_start: 'asc'
+      }
+    });
   }
 
   // Get events by building
-  async getEventsByBuilding(buildingId: number): Promise<Event[]> {
-    const sql = 'SELECT * FROM raw_events WHERE building_id = ? ORDER BY event_start ASC';
-    return await this.db.query<Event>(sql, [buildingId]);
+  async getEventsByBuilding(buildingId: number): Promise<raw_events[]> {
+    return await prisma.raw_events.findMany({
+      where: {
+        building_id: buildingId
+      },
+      orderBy: {
+        event_start: 'asc'
+      }
+    });
   }
 
   // Update last_checked timestamp for events (without affecting updated_at)
   async updateLastChecked(eventIds: number[]): Promise<void> {
     if (eventIds.length === 0) return;
     
-    const placeholders = eventIds.map(() => '?').join(',');
-    const sql = `UPDATE raw_events SET last_checked = ? WHERE id IN (${placeholders})`;
-    const values = [new Date(), ...eventIds];
-    
-    await this.db.query(sql, values);
+    await prisma.raw_events.updateMany({
+      where: {
+        id: {
+          in: eventIds
+        }
+      },
+      data: {
+        last_checked: new Date()
+      }
+    });
   }
 
   // Initialize database schema
   async initializeSchema(): Promise<void> {
-    // Split and execute each statement
-    const statements = EVENT_SCHEMA.split(';').filter(stmt => stmt.trim().length > 0);
-    for (const statement of statements) {
-      await this.db.query(statement);
-    }
+    // With Prisma, schema initialization is handled by migrations
+    // This method is kept for compatibility but may not be needed
+    console.log('Schema initialization is handled by Prisma migrations');
   }
 }

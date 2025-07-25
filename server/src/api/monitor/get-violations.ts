@@ -1,5 +1,5 @@
 import { ApiEndpoint, AuthType } from '@/types/api-types';
-import DatabaseManager from '@/controllers/database-manager';
+import { prisma } from '@/lib/prisma';
 import { RawConstantViolation } from '@/types/event-types';
 
 interface GetViolationsQuery {
@@ -27,12 +27,10 @@ export const getViolationsEndpoint: ApiEndpoint<GetViolationsQuery, GetViolation
     try {
       const { eventId, fieldName, limit = '100', offset = '0' } = req.query as GetViolationsQuery;
       
-      const db = DatabaseManager.getInstance();
       const limitNum = Math.min(parseInt(limit) || 100, 1000);
       const offsetNum = parseInt(offset) || 0;
 
-      let sql = 'SELECT * FROM raw_constant_violations WHERE 1=1';
-      const params: any[] = [];
+      const whereClause: any = {};
 
       if (eventId) {
         const eventIdNum = parseInt(eventId);
@@ -46,28 +44,33 @@ export const getViolationsEndpoint: ApiEndpoint<GetViolationsQuery, GetViolation
           });
           return;
         }
-        sql += ' AND event_id = ?';
-        params.push(eventIdNum);
+        whereClause.event_id = eventIdNum;
       }
 
       if (fieldName) {
-        sql += ' AND field_name = ?';
-        params.push(fieldName);
+        whereClause.field_name = fieldName;
       }
 
-      sql += ' ORDER BY violation_time DESC';
+      const [violations, total] = await Promise.all([
+        prisma.raw_constant_violations.findMany({
+          where: whereClause,
+          orderBy: {
+            violation_time: 'desc'
+          },
+          skip: offsetNum,
+          take: limitNum
+        }),
+        prisma.raw_constant_violations.count({
+          where: whereClause
+        })
+      ]);
       
-      const violations = await db.query<RawConstantViolation>(sql, params);
-      
-      // Apply pagination
-      const total = violations.length;
-      const paginatedViolations = violations.slice(offsetNum, offsetNum + limitNum);
       const hasMore = offsetNum + limitNum < total;
 
       res.json({
         success: true,
         data: {
-          violations: paginatedViolations,
+          violations: violations as RawConstantViolation[],
           total,
           hasMore,
           filters: {

@@ -2,7 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import ApiManager from '@/controllers/api-manager';
-import DatabaseManager from '@/controllers/database-manager';
+import { prisma } from '@/lib/prisma';
 import { ScraperService } from '@/services/scraper-service';
 import { SCRAPER_CONFIG } from '@/config/scraper-config';
 
@@ -16,7 +16,9 @@ app.use(express.json());
 
 const startServer = async () => {
     try {
-        await DatabaseManager.getInstance().connect();
+        // Test Prisma connection
+        await prisma.$connect();
+        console.log('Prisma connected successfully');
         
         // Initialize scraper service
         const scraper = new ScraperService();

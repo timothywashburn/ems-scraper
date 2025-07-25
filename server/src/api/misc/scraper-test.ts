@@ -1,5 +1,5 @@
 import { ApiEndpoint, AuthType } from '@/types/api-types';
-import DatabaseManager from '@/controllers/database-manager';
+import { prisma } from '@/lib/prisma';
 
 interface ScraperTestResponse {
   message: string;
@@ -12,12 +12,11 @@ export const scraperTestEndpoint: ApiEndpoint<{}, ScraperTestResponse> = {
   path: '/api/test/scraper',
   auth: AuthType.NONE,
   handler: async (req, res) => {
-    const dbManager = DatabaseManager.getInstance();
     let databaseConnected = false;
     let testQuerySuccess = false;
 
     try {
-      await dbManager.query('SELECT 1 as test');
+      await prisma.$queryRaw`SELECT 1 as test`;
       databaseConnected = true;
       testQuerySuccess = true;
     } catch (error) {

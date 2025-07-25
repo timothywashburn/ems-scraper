@@ -1,7 +1,7 @@
 // Scraper configuration constants
 export const SCRAPER_CONFIG = {
   // Scraper enable/disable flags
-  RUN_HISTORICAL_SCRAPER: true,
+  RUN_HISTORICAL_SCRAPER: false,
   RUN_UPCOMING_SCRAPER: false,
   
   // Rate limiting settings

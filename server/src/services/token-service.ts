@@ -65,16 +65,4 @@ export class TokenService {
       console.log('⚠️  Save this token securely - it will not be shown again!');
     }
   }
-
-  async getTokens(): Promise<ApiToken[]> {
-    return await prisma.api_tokens.findMany({
-      orderBy: { created_at: 'desc' },
-    });
-  }
-
-  async deleteToken(tokenId: number): Promise<void> {
-    await prisma.api_tokens.delete({
-      where: { id: tokenId },
-    });
-  }
 }

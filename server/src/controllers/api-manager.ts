@@ -15,7 +15,7 @@ export default class ApiManager {
     private constructor() {
         this.router = express.Router();
         this.setupMiddleware();
-        // this.registerEndpoints(); // TODO: Secure endpoints
+        this.registerEndpoints();
     }
 
     private registerEndpoints() {

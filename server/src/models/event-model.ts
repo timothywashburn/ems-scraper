@@ -270,11 +270,4 @@ export class EventModel {
       }
     });
   }
-
-  // Initialize database schema
-  async initializeSchema(): Promise<void> {
-    // With Prisma, schema initialization is handled by migrations
-    // This method is kept for compatibility but may not be needed
-    console.log('Schema initialization is handled by Prisma migrations');
-  }
 }

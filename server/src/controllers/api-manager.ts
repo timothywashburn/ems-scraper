@@ -2,9 +2,6 @@ import express, { Router, Request, Response, NextFunction, RequestHandler } from
 import { ApiEndpoint, ApiRequest, ApiResponse, AuthType, ErrorCode } from '@/types/api-types';
 import { statusEndpoint } from '@/api/misc/status';
 import { scraperTestEndpoint } from '@/api/misc/scraper-test';
-import { schedulerStatusEndpoint } from '@/api/scheduler/scheduler-status';
-import { startSchedulerEndpoint } from '@/api/scheduler/start-scheduler';
-import { stopSchedulerEndpoint } from '@/api/scheduler/stop-scheduler';
 import { getViolationsEndpoint } from '@/api/monitor/get-violations';
 import { TokenService } from '@/services/token-service';
 
@@ -22,11 +19,6 @@ export default class ApiManager {
         // Status endpoints
         this.addEndpoint(statusEndpoint);
         this.addEndpoint(scraperTestEndpoint);
-        
-        // Scheduler endpoints
-        this.addEndpoint(schedulerStatusEndpoint);
-        this.addEndpoint(startSchedulerEndpoint);
-        this.addEndpoint(stopSchedulerEndpoint);
         
         // Monitoring endpoints
         this.addEndpoint(getViolationsEndpoint);

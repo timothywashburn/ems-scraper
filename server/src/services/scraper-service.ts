@@ -1,29 +1,34 @@
 import { HistoricalScraper } from './historical-scraper';
-import { DailyScraper } from './daily-scraper';
+import { ContinuousScraper } from './continuous-scraper';
 
 import { ScraperStats } from "@/types/scraper-types";
 
 export class ScraperService {
   private historicalScraper: HistoricalScraper;
-  private dailyScraper: DailyScraper;
+  private continuousScraper: ContinuousScraper;
 
   constructor() {
     this.historicalScraper = new HistoricalScraper();
-    this.dailyScraper = new DailyScraper();
+    this.continuousScraper = new ContinuousScraper();
   }
 
   async scrapeHistoricalData(): Promise<ScraperStats> {
     return await this.historicalScraper.scrapeHistoricalData();
   }
 
-  async scrapeUpcoming(): Promise<ScraperStats> {
-    return await this.dailyScraper.scrapeUpcoming();
+  async startContinuousScraping(): Promise<void> {
+    return await this.continuousScraper.startContinuousScraping();
   }
 
-  async initialize(): Promise<void> {
-    console.log('Initializing scraper service...');
-    await this.historicalScraper.initialize();
-    await this.dailyScraper.initialize();
-    console.log('Scraper service initialized');
+  async stopContinuousScraping(): Promise<void> {
+    return await this.continuousScraper.stopContinuousScraping();
+  }
+
+  async getContinuousScraperStatus(): Promise<{
+    isRunning: boolean;
+    currentDate?: Date;
+    lastUpdate?: Date;
+  }> {
+    return await this.continuousScraper.getScraperStatus();
   }
 }

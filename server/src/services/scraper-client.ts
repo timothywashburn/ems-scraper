@@ -1,17 +1,28 @@
 import { EventModel } from '@/models/event-model';
 import { UCSDApiResponse, RawEventData } from '@/types/event-types';
 import { FilterData, EventsRequest, RetryConfig } from '@/types/scraper-types';
-import { SCRAPER_CONFIG } from '@/config/scraper-config';
+// Scraper client will receive config from concrete implementations
+
+interface ScraperConfig {
+  REQUEST_DELAY_MS: number;
+  MIN_REQUEST_DELAY_MS: number;
+  MAX_RETRIES: number;
+  EXPONENTIAL_BACKOFF_BASE: number;
+  BASE_DELAY_MS: number;
+  MAX_DELAY_MS: number;
+}
 
 export abstract class ScraperClient {
   protected baseUrl = 'https://reservations.ucsd.edu/EmsWebApp';
   protected csrfToken = '';
   protected csrfTokenTimestamp = 0;
   protected eventModel: EventModel;
+  protected config: ScraperConfig;
   private readonly CSRF_TOKEN_EXPIRY_MS = 1000 * 60 * 60; // 1 hour
 
-  constructor() {
+  constructor(config: ScraperConfig) {
     this.eventModel = new EventModel();
+    this.config = config;
   }
 
   protected async getCSRFToken(): Promise<void> {
@@ -45,8 +56,8 @@ export abstract class ScraperClient {
   protected calculateDynamicDelay(requestStartTime: number): number {
     const requestDuration = Date.now() - requestStartTime;
     const remainingDelay = Math.max(
-      SCRAPER_CONFIG.REQUEST_DELAY_MS - requestDuration,
-      SCRAPER_CONFIG.MIN_REQUEST_DELAY_MS
+      this.config.REQUEST_DELAY_MS - requestDuration,
+      this.config.MIN_REQUEST_DELAY_MS
     );
     return remainingDelay;
   }
@@ -61,10 +72,10 @@ export abstract class ScraperClient {
     shouldResetSession: (error: Error) => boolean = () => false
   ): Promise<T> {
     const retryConfig: RetryConfig = {
-      maxRetries: SCRAPER_CONFIG.MAX_RETRIES,
-      baseDelayMs: SCRAPER_CONFIG.BASE_DELAY_MS,
-      maxDelayMs: SCRAPER_CONFIG.MAX_DELAY_MS,
-      exponentialBase: SCRAPER_CONFIG.EXPONENTIAL_BACKOFF_BASE
+      maxRetries: this.config.MAX_RETRIES,
+      baseDelayMs: this.config.BASE_DELAY_MS,
+      maxDelayMs: this.config.MAX_DELAY_MS,
+      exponentialBase: this.config.EXPONENTIAL_BACKOFF_BASE
     };
 
     for (let attempt = 1; attempt <= retryConfig.maxRetries; attempt++) {
@@ -207,11 +218,5 @@ export abstract class ScraperClient {
     }
 
     return { events: filteredEvents, violations: allViolations, requestStartTime: fetchResult.requestStartTime };
-  }
-
-  async initialize(): Promise<void> {
-    console.log('Initializing scraper client...');
-    await this.eventModel.initializeSchema();
-    console.log('Database schema initialized');
   }
 }

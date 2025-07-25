@@ -4,7 +4,8 @@ import dotenv from 'dotenv';
 import ApiManager from '@/controllers/api-manager';
 import { prisma } from '@/lib/prisma';
 import { ScraperService } from '@/services/scraper-service';
-import { SCRAPER_CONFIG } from '@/config/scraper-config';
+import { HISTORICAL_SCRAPER_CONFIG } from '@/config/historical-scraper-config';
+import { CONTINUOUS_SCRAPER_CONFIG } from '@/config/continuous-scraper-config';
 import { TokenService } from '@/services/token-service';
 
 dotenv.config({ path: ['.env.development', '.env.development.local', '.env.production', '.env.production.local'] });
@@ -26,10 +27,9 @@ const startServer = async () => {
         
         // Initialize scraper service
         const scraper = new ScraperService();
-        await scraper.initialize();
         
         // Run scrapers based on config constants
-        if (SCRAPER_CONFIG.RUN_HISTORICAL_SCRAPER) {
+        if (HISTORICAL_SCRAPER_CONFIG.RUN_HISTORICAL_SCRAPER) {
             console.log('🚀 Starting historical scraper...');
             scraper.scrapeHistoricalData()
                 .then(stats => {
@@ -40,14 +40,14 @@ const startServer = async () => {
                 });
         }
         
-        if (SCRAPER_CONFIG.RUN_UPCOMING_SCRAPER) {
-            console.log('🔄 Starting upcoming scraper...');
-            scraper.scrapeUpcoming()
-                .then(stats => {
-                    console.log('✅ Upcoming scraping completed:', stats);
+        if (CONTINUOUS_SCRAPER_CONFIG.RUN_CONTINUOUS_SCRAPER) {
+            console.log('🔄 Starting continuous scraper...');
+            scraper.startContinuousScraping()
+                .then(() => {
+                    console.log('✅ Continuous scraper completed');
                 })
                 .catch(error => {
-                    console.error('❌ Upcoming scraping failed:', error);
+                    console.error('❌ Continuous scraper failed:', error);
                 });
         }
         

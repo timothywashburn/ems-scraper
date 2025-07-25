@@ -1,11 +1,15 @@
 import { ScraperClient } from './scraper-client';
-import { SCRAPER_CONFIG } from '@/config/scraper-config';
+import { HISTORICAL_SCRAPER_CONFIG } from '@/config/historical-scraper-config';
 import { getHistoricalEndDate } from '@/utils/date-helpers';
 
 import { ScraperStats } from "@/types/scraper-types";
 
 export class HistoricalScraper extends ScraperClient {
-  async scrapeAndPersistDateRange(startDate: Date, endDate: Date): Promise<{
+  constructor() {
+    super(HISTORICAL_SCRAPER_CONFIG);
+  }
+
+  async scrapeDateRange(startDate: Date, endDate: Date): Promise<{
     totalDays: number;
     totalEvents: number;
     inserted: number;
@@ -33,18 +37,22 @@ export class HistoricalScraper extends ScraperClient {
         stats.violations.push(...result.violations);
 
         if (result.events.length > 0) {
+          // Historical mode: check for existing events BEFORE processing
+          for (const event of result.events) {
+            const existingEvent = await this.eventModel.getEventById(event.Id);
+            if (existingEvent) {
+              console.error(`❌ HISTORICAL SCRAPER STOPPED: Found existing event ID ${event.Id} on ${currentDate.toISOString().split('T')[0]}`);
+              console.error(`This indicates the historical data range overlaps with existing data.`);
+              console.error(`Please adjust HISTORICAL_START_DATE in scraper config to start after existing data.`);
+              process.exit(1);
+            }
+          }
+
+          // If we get here, all events are new - safe to insert
           const batchResults = await this.eventModel.bulkUpsertEvents(result.events);
           stats.inserted += batchResults.inserted;
           stats.updated += batchResults.updated;
           stats.totalChanges += batchResults.totalChanges;
-
-          // Historical mode: fail if any events were updated (should all be new)
-          if (batchResults.updated > 0) {
-            console.error(`❌ HISTORICAL SCRAPER STOPPED: Found ${batchResults.updated} existing events that would be updated on ${currentDate.toISOString().split('T')[0]}`);
-            console.error(`This indicates the historical data range overlaps with existing data.`);
-            console.error(`Please adjust HISTORICAL_START_DATE in scraper config to start after existing data.`);
-            process.exit(1);
-          }
 
           console.log(`✓ Processed ${result.events.length} events (${batchResults.inserted} new, ${batchResults.updated} updated, ${batchResults.totalChanges} changes)`);
         } else {
@@ -74,11 +82,11 @@ export class HistoricalScraper extends ScraperClient {
 
   async scrapeHistoricalData(): Promise<ScraperStats> {
     console.log('🚀 Starting historical data scraping...');
-    const startDate = SCRAPER_CONFIG.HISTORICAL_START_DATE;
+    const startDate = HISTORICAL_SCRAPER_CONFIG.HISTORICAL_START_DATE;
     const endDate = getHistoricalEndDate();
     console.log(`Date range: ${startDate.toISOString().split('T')[0]} to ${endDate.toISOString().split('T')[0]}`);
 
-    const result = await this.scrapeAndPersistDateRange(startDate, endDate);
+    const result = await this.scrapeDateRange(startDate, endDate);
 
     console.log('\n🎉 Historical scraping completed!');
     console.log(`📊 Summary:`);

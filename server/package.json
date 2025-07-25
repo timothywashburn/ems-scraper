@@ -7,12 +7,18 @@
     "build": "tsc --build && tsc-alias",
     "dev": "npx tsx watch src/server.ts",
     "start": "node dist/server.js",
-    "prisma:generate": "prisma generate"
+    "prisma:generate": "prisma generate",
+    "db:migrate:dev": "dotenv -e .env.development -e .env.development.local -- prisma migrate dev",
+    "db:studio:dev": "dotenv -e .env.development -e .env.development.local -- prisma studio",
+    "db:reset:dev": "dotenv -e .env.development -e .env.development.local -- prisma migrate reset",
+    "db:migrate:prod": "dotenv -e .env.production -e .env.production.local -- prisma migrate deploy",
+    "db:studio:prod": "dotenv -e .env.production -e .env.production.local -- prisma studio"
   },
   "dependencies": {
     "@prisma/client": "^6.12.0",
     "cors": "^2.8.5",
     "dotenv": "^17.2.0",
+    "dotenv-cli": "^9.0.0",
     "express": "^5.1.0",
     "prisma": "^6.12.0"
   },

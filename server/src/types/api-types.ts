@@ -3,8 +3,9 @@ import { Request, Response } from 'express';
 export interface ApiRequest<T = any> extends Request {
   body: T;
   auth?: {
-    authId: string;
-    userId: string;
+    tokenId: number;
+    tokenName: string;
+    isAdmin: boolean;
   };
 }
 
@@ -29,6 +30,7 @@ export interface ApiErrorResponse {
 export enum AuthType {
   NONE = 'none',
   AUTHENTICATED = 'authenticated',
+  ADMIN_AUTHENTICATED = 'admin_authenticated',
 }
 
 export interface ApiEndpoint<TReq = any, TRes = any> {

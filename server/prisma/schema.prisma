@@ -61,3 +61,14 @@ model raw_events {
   @@index([room_id], map: "idx_room_id")
 }
 
+model api_tokens {
+  id           Int       @id @default(autoincrement())
+  token        String    @unique @db.VarChar(255)
+  is_admin     Boolean   @default(false)
+  comment      String    @db.VarChar(255)
+  created_at   DateTime  @default(now()) @db.Timestamp(0)
+  last_used    DateTime? @db.Timestamp(0)
+
+  @@index([token], map: "idx_token")
+}
+

@@ -6,6 +6,7 @@ import { schedulerStatusEndpoint } from '@/api/scheduler/scheduler-status';
 import { startSchedulerEndpoint } from '@/api/scheduler/start-scheduler';
 import { stopSchedulerEndpoint } from '@/api/scheduler/stop-scheduler';
 import { getViolationsEndpoint } from '@/api/monitor/get-violations';
+import { TokenService } from '@/services/token-service';
 
 export default class ApiManager {
     private static instance: ApiManager;
@@ -94,18 +95,56 @@ export default class ApiManager {
             return;
         }
 
+        const tokenService = TokenService.getInstance();
+        const apiToken = await tokenService.validateToken(token);
+
+        if (!apiToken) {
+            res.status(401).json({
+                success: false,
+                error: {
+                    message: 'Invalid token',
+                    code: ErrorCode.INVALID_TOKEN,
+                },
+            });
+            return;
+        }
+
         req.auth = {
-            authId: 'temp-auth-id',
-            userId: 'temp-user-id',
+            tokenId: apiToken.id,
+            tokenName: apiToken.comment,
+            isAdmin: apiToken.is_admin,
         };
 
         next();
+    };
+
+    private handleAdminAuth: RequestHandler = async (req: ApiRequest, res: ApiResponse, next: NextFunction): Promise<void> => {
+        await this.handleAuth(req, res, (error?: any) => {
+            if (error) {
+                next(error);
+                return;
+            }
+
+            if (!req.auth?.isAdmin) {
+                res.status(403).json({
+                    success: false,
+                    error: {
+                        message: 'Admin access required',
+                        code: ErrorCode.FORBIDDEN,
+                    },
+                });
+                return;
+            }
+
+            next();
+        });
     };
 
     addEndpoint<TReq, TRes>(endpoint: ApiEndpoint<TReq, TRes>) {
         const handlers: RequestHandler[] = [];
 
         if (endpoint.auth === AuthType.AUTHENTICATED) handlers.push(this.handleAuth);
+        if (endpoint.auth === AuthType.ADMIN_AUTHENTICATED) handlers.push(this.handleAdminAuth);
         handlers.push(endpoint.handler);
 
         this.router[endpoint.method](endpoint.path, ...handlers);

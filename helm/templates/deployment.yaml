@@ -25,14 +25,8 @@ spec:
         env:
         - name: NODE_ENV
           value: "production"
-        - name: MYSQL_HOST
-          value: "mysql-service"
-        - name: MYSQL_PORT
-          value: "3306"
-        - name: MYSQL_DATABASE
-          value: "ems_scraper"
-        - name: MYSQL_USER
-          value: "root"
+        - name: DATABASE_URL
+          value: "mysql://root:$(MYSQL_PASSWORD)@mysql-service:3306/ems_scraper"
         - name: MYSQL_PASSWORD
           valueFrom:
             secretKeyRef:

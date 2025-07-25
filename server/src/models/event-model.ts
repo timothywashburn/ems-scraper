@@ -46,17 +46,17 @@ const EXPECTED_CONSTANTS: Record<string, string> = {
 export class EventModel {
   constructor() {}
 
-  // Transform raw API data to database format
+  // Transform raw API data to database format - store dates as raw strings
   private transformRawEvent(raw: RawEventData): Omit<raw_events, 'created_at' | 'updated_at' | 'last_checked'> {
     return {
       id: raw.Id,
       event_name: raw.EventName,
-      event_start: new Date(raw.EventStart),
-      event_end: new Date(raw.EventEnd),
-      gmt_start: new Date(raw.GmtStart),
-      gmt_end: new Date(raw.GmtEnd),
-      time_booking_start: new Date(raw.TimeBookingStart),
-      time_booking_end: new Date(raw.TimeBookingEnd),
+      event_start: raw.EventStart,
+      event_end: raw.EventEnd,
+      gmt_start: raw.GmtStart,
+      gmt_end: raw.GmtEnd,
+      time_booking_start: raw.TimeBookingStart,
+      time_booking_end: raw.TimeBookingEnd,
       is_all_day_event: raw.IsAllDayEvent,
       timezone_abbreviation: raw.TimezoneAbbreviation,
       building: raw.Building,
@@ -99,13 +99,8 @@ export class EventModel {
     });
   }
 
-  // Update existing event and detect changes
-  async updateEvent(rawEvent: RawEventData): Promise<EventChanges | null> {
-    const existingEvent = await this.getEventById(rawEvent.Id);
-    if (!existingEvent) {
-      throw new Error(`Event with ID ${rawEvent.Id} not found`);
-    }
-
+  // Detect changes without updating (for dry run analysis)
+  async detectChanges(rawEvent: RawEventData, existingEvent: raw_events): Promise<EventChanges | null> {
     const newEvent = this.transformRawEvent(rawEvent);
     const changes: EventChanges['changes'] = [];
 
@@ -122,12 +117,8 @@ export class EventModel {
       const oldValue = existingEvent[field];
       const newValue = newEvent[field];
       
-      // Handle date comparison
-      if (oldValue instanceof Date && newValue instanceof Date) {
-        if (oldValue.getTime() !== newValue.getTime()) {
-          changes.push({ field, oldValue, newValue });
-        }
-      } else if (oldValue !== newValue) {
+      // Simple string/value comparison (dates are now strings)
+      if (oldValue !== newValue) {
         changes.push({ field, oldValue, newValue });
       }
     }
@@ -137,7 +128,29 @@ export class EventModel {
       return null;
     }
 
+    return {
+      eventId: rawEvent.Id,
+      changes,
+      changeCount: changes.length
+    };
+  }
+
+  // Update existing event and detect changes
+  async updateEvent(rawEvent: RawEventData): Promise<EventChanges | null> {
+    const existingEvent = await this.getEventById(rawEvent.Id);
+    if (!existingEvent) {
+      throw new Error(`Event with ID ${rawEvent.Id} not found`);
+    }
+
+    const changes = await this.detectChanges(rawEvent, existingEvent);
+
+    // If no changes, return null
+    if (!changes) {
+      return null;
+    }
+
     // Update the event
+    const newEvent = this.transformRawEvent(rawEvent);
     const now = new Date();
     await prisma.raw_events.update({
       where: { id: newEvent.id },
@@ -148,11 +161,7 @@ export class EventModel {
       }
     });
 
-    return {
-      eventId: rawEvent.Id,
-      changes,
-      changeCount: changes.length
-    };
+    return changes;
   }
 
   // Upsert event (insert or update)

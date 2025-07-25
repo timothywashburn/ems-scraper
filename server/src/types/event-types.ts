@@ -87,12 +87,12 @@ export interface Event {
   updated_at: Date;
   last_checked: Date;
   event_name: string;
-  event_start: Date;
-  event_end: Date;
-  gmt_start: Date;
-  gmt_end: Date;
-  time_booking_start: Date;
-  time_booking_end: Date;
+  event_start: string;
+  event_end: string;
+  gmt_start: string;
+  gmt_end: string;
+  time_booking_start: string;
+  time_booking_end: string;
   is_all_day_event: boolean;
   timezone_abbreviation: string;
   building: string;

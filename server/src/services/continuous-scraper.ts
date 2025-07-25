@@ -4,6 +4,7 @@ import { ScraperStateModel } from '@/models/scraper-state-model';
 import { CONTINUOUS_SCRAPER_CONFIG } from '@/config/continuous-scraper-config';
 
 import { ScraperStats } from "@/types/scraper-types";
+import { RawEventData } from "@/types/event-types";
 
 export class ContinuousScraper extends ScraperClient {
   private scraperStateModel: ScraperStateModel;
@@ -15,6 +16,34 @@ export class ContinuousScraper extends ScraperClient {
     super(CONTINUOUS_SCRAPER_CONFIG);
     this.scraperStateModel = new ScraperStateModel();
   }
+
+  private async processEventsWithDetailedLogging(events: RawEventData[]): Promise<{
+    inserted: number;
+    updated: number;
+    totalChanges: number;
+  }> {
+    let inserted = 0;
+    let updated = 0;
+    let totalChanges = 0;
+
+    for (const event of events) {
+      const result = await this.eventModel.upsertEvent(event);
+      if (result.action === 'inserted') {
+        inserted++;
+      } else {
+        updated++;
+        if (result.changes && result.changes.changes.length > 0) {
+          console.log(`🔄 Event ${event.Id} changed (${result.changes.changes.length} fields):`);
+          for (const change of result.changes.changes) {
+            console.log(`   ${String(change.field)}: ${JSON.stringify(change.oldValue)} → ${JSON.stringify(change.newValue)}`);
+          }
+          totalChanges += result.changes.changeCount;
+        }
+      }
+    }
+
+    return { inserted, updated, totalChanges };
+  }
   private async scrapeEvents(date: Date): Promise<void> {
     try {
       const isDryRun = CONTINUOUS_SCRAPER_CONFIG.CONTINUOUS_SCRAPER_DRY_RUN;
@@ -25,9 +54,26 @@ export class ContinuousScraper extends ScraperClient {
       if (result.events.length > 0) {
         if (isDryRun) {
           console.log(`🔍 DRY RUN: Would process ${result.events.length} events (no database changes made)`);
+          // In dry run, still check what would change
+          for (const event of result.events) {
+            const existingEvent = await this.eventModel.getEventById(event.Id);
+            if (existingEvent) {
+              const changes = await this.eventModel.detectChanges(event, existingEvent);
+              if (changes && changes.changes.length > 0) {
+                console.log(`🔍 DRY RUN: Event ${event.Id} would have ${changes.changes.length} changes:`);
+                for (const change of changes.changes) {
+                  console.log(`   ${String(change.field)}: ${JSON.stringify(change.oldValue)} → ${JSON.stringify(change.newValue)}`);
+                }
+              }
+            }
+          }
         } else {
-          const batchResults = await this.eventModel.bulkUpsertEvents(result.events);
-          console.log(`✓ Processed ${result.events.length} events (${batchResults.inserted} new, ${batchResults.updated} updated, ${batchResults.totalChanges} changes)`);
+          const detailedResults = await this.processEventsWithDetailedLogging(result.events);
+          console.log(`✓ Processed ${result.events.length} events (${detailedResults.inserted} new, ${detailedResults.updated} updated, ${detailedResults.totalChanges} changes)`);
+          
+          // Update last_checked for all events (metadata update)
+          const eventIds = result.events.map(e => e.Id);
+          await this.eventModel.updateLastChecked(eventIds);
         }
       } else {
         console.log('✓ No events found for this date');

@@ -5,7 +5,7 @@
   "main": "src/server.ts",
   "scripts": {
     "build": "tsc --build && tsc-alias",
-    "dev": "npx tsx watch src/server.ts",
+    "dev": "dotenv -c development -- npx tsx watch src/server.ts",
     "start": "node dist/server.js",
     "prisma:generate": "prisma generate",
     "db:reset:dev": "dotenv -c development -- prisma migrate reset",

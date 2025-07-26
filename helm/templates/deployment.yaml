@@ -26,7 +26,10 @@ spec:
         - name: NODE_ENV
           value: "production"
         - name: DATABASE_URL
-          value: "mysql://root:$(MYSQL_PASSWORD)@mysql-service:3306/ems_scraper"
+          valueFrom:
+            secretKeyRef:
+              name: mysql-secret
+              key: database-url
         - name: MYSQL_PASSWORD
           valueFrom:
             secretKeyRef:

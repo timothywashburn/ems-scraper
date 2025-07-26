@@ -8,8 +8,6 @@ import { HISTORICAL_SCRAPER_CONFIG } from '@/config/historical-scraper-config';
 import { CONTINUOUS_SCRAPER_CONFIG } from '@/config/continuous-scraper-config';
 import { TokenService } from '@/services/token-service';
 
-dotenv.config({ path: ['.env.development', '.env.development.local', '.env.production', '.env.production.local'] });
-
 const app = express();
 const PORT = 3000;
 

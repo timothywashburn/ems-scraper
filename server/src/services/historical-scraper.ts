@@ -3,6 +3,7 @@ import { HISTORICAL_SCRAPER_CONFIG } from '@/config/historical-scraper-config';
 import { getHistoricalEndDate } from '@/utils/date-helpers';
 
 import { ScraperStats } from "@/types/scraper-types";
+import { IdConverters } from "@timothyw/ems-scraper-types";
 
 export class HistoricalScraper extends ScraperClient {
   constructor() {
@@ -39,7 +40,7 @@ export class HistoricalScraper extends ScraperClient {
         if (result.events.length > 0) {
           // Historical mode: check for existing events BEFORE processing
           for (const event of result.events) {
-            const existingEvent = await this.eventModel.getEventById(event.Id);
+            const existingEvent = await this.eventModel.getEventById(IdConverters.toEventId(event.Id));
             if (existingEvent) {
               console.error(`❌ HISTORICAL SCRAPER STOPPED: Found existing event ID ${event.Id} on ${currentDate.toISOString().split('T')[0]}`);
               console.error(`This indicates the historical data range overlaps with existing data.`);

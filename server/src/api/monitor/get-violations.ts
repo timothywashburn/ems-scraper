@@ -1,6 +1,6 @@
-import { ApiEndpoint, AuthType } from '@/types/api-types';
+import { ApiEndpoint, AuthType, ApiRequest, ApiResponse } from '@/types/api-types';
+import { RawConstantViolation } from '@timothyw/ems-scraper-types';
 import { prisma } from '@/lib/prisma';
-import { RawConstantViolation } from '@/types/event-types';
 
 interface GetViolationsQuery {
   eventId?: string;
@@ -22,7 +22,7 @@ interface GetViolationsResponse {
 export const getViolationsEndpoint: ApiEndpoint<GetViolationsQuery, GetViolationsResponse> = {
   method: 'get',
   path: '/api/monitor/violations',
-  auth: AuthType.NONE,
+  auth: AuthType.AUTHENTICATED,
   handler: async (req, res) => {
     try {
       const { eventId, fieldName, limit = '100', offset = '0' } = req.query as GetViolationsQuery;

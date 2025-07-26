@@ -4,7 +4,7 @@ import { ScraperStateModel } from '@/models/scraper-state-model';
 import { CONTINUOUS_SCRAPER_CONFIG } from '@/config/continuous-scraper-config';
 
 import { ScraperStats } from "@/types/scraper-types";
-import { RawEventData } from "@/types/event-types";
+import { RawEventData, IdConverters } from "@timothyw/ems-scraper-types";
 
 export class ContinuousScraper extends ScraperClient {
   private scraperStateModel: ScraperStateModel;
@@ -28,7 +28,7 @@ export class ContinuousScraper extends ScraperClient {
 
     for (const event of events) {
       if (isDryRun) {
-        const existingEvent = await this.eventModel.getEventById(event.Id);
+        const existingEvent = await this.eventModel.getEventById(IdConverters.toEventId(event.Id));
         if (existingEvent) {
           const changes = await this.eventModel.detectChanges(event, existingEvent);
           if (changes && changes.changes.length > 0) {
@@ -94,7 +94,7 @@ export class ContinuousScraper extends ScraperClient {
         console.log(`${modePrefix} ${eventCount} events ${changesSummary}`);
         
         if (!isDryRun) {
-          const eventIds = result.events.map(e => e.Id);
+          const eventIds = result.events.map(e => IdConverters.toEventId(e.Id));
           await this.eventModel.updateLastChecked(eventIds);
         }
       } else {
@@ -112,7 +112,7 @@ export class ContinuousScraper extends ScraperClient {
         if (isDryRun) {
           console.log(`🔍 DRY RUN: Would mark ${noLongerFoundIds.length} events as no longer found: [${noLongerFoundIds.join(', ')}]`);
         } else {
-          await this.eventModel.markEventsNoLongerFound(noLongerFoundIds);
+          await this.eventModel.markEventsNoLongerFound(noLongerFoundIds.map(id => IdConverters.toEventId(id)));
           console.log(`❌ Marked ${noLongerFoundIds.length} events as no longer found: [${noLongerFoundIds.join(', ')}]`);
         }
       }
@@ -121,7 +121,7 @@ export class ContinuousScraper extends ScraperClient {
         if (isDryRun) {
           console.log(`🔍 DRY RUN: Would clear no-longer-found status for ${foundAgainIds.length} events: [${foundAgainIds.join(', ')}]`);
         } else {
-          await this.eventModel.clearNoLongerFound(foundAgainIds);
+          await this.eventModel.clearNoLongerFound(foundAgainIds.map(id => IdConverters.toEventId(id)));
           console.log(`✅ Cleared no-longer-found status for ${foundAgainIds.length} events: [${foundAgainIds.join(', ')}]`);
         }
       }

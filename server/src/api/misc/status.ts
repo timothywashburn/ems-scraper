@@ -1,4 +1,4 @@
-import { ApiEndpoint, AuthType } from '@/types/api-types';
+import { ApiEndpoint, AuthType, ApiRequest, ApiResponse } from '@/types/api-types';
 
 interface StatusResponse {
   status: string;
@@ -6,7 +6,7 @@ interface StatusResponse {
   service: string;
 }
 
-export const statusEndpoint: ApiEndpoint<{}, StatusResponse> = {
+export const statusEndpoint: ApiEndpoint<undefined, StatusResponse> = {
   method: 'get',
   path: '/api/status',
   auth: AuthType.NONE,

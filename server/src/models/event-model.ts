@@ -1,5 +1,6 @@
 import { prisma } from '@/lib/prisma';
 import { Event, RawEventData, EventChanges } from '@/types/event-types';
+import { EventId, IdConverters } from '@timothyw/ems-scraper-types';
 import { raw_events } from '@prisma/client';
 
 // Expected constant field values for monitoring
@@ -49,7 +50,7 @@ export class EventModel {
   // Transform raw API data to database format - store dates as raw strings
   private transformRawEvent(raw: RawEventData): Omit<raw_events, 'created_at' | 'updated_at' | 'last_checked' | 'no_longer_found_at'> {
     return {
-      id: raw.Id,
+      id: IdConverters.fromEventId(IdConverters.toEventId(raw.Id)),
       event_name: raw.EventName,
       event_start: raw.EventStart,
       event_end: raw.EventEnd,
@@ -60,19 +61,19 @@ export class EventModel {
       is_all_day_event: raw.IsAllDayEvent,
       timezone_abbreviation: raw.TimezoneAbbreviation,
       building: raw.Building,
-      building_id: raw.BuildingId,
+      building_id: IdConverters.fromBuildingId(IdConverters.toBuildingId(raw.BuildingId)),
       room: raw.Room,
-      room_id: raw.RoomId,
+      room_id: IdConverters.fromRoomId(IdConverters.toRoomId(raw.RoomId)),
       room_code: raw.RoomCode,
       room_type: raw.RoomType,
-      room_type_id: raw.RoomTypeId,
+      room_type_id: IdConverters.fromRoomTypeId(IdConverters.toRoomTypeId(raw.RoomTypeId)),
       location: raw.Location,
       location_link: raw.LocationLink,
       group_name: raw.GroupName,
-      reservation_id: raw.ReservationId,
+      reservation_id: IdConverters.fromReservationId(IdConverters.toReservationId(raw.ReservationId)),
       reservation_summary_url: raw.ReservationSummaryUrl,
-      status_id: raw.StatusId,
-      status_type_id: raw.StatusTypeId,
+      status_id: IdConverters.fromStatusId(IdConverters.toStatusId(raw.StatusId)),
+      status_type_id: IdConverters.fromStatusTypeId(IdConverters.toStatusTypeId(raw.StatusTypeId)),
       web_user_is_owner: raw.WebUserIsOwner
     };
   }
@@ -93,9 +94,9 @@ export class EventModel {
   }
 
   // Check if event exists and get current data
-  async getEventById(id: number): Promise<raw_events | null> {
+  async getEventById(id: EventId): Promise<raw_events | null> {
     return await prisma.raw_events.findUnique({
-      where: { id }
+      where: { id: IdConverters.fromEventId(id) }
     });
   }
 
@@ -129,7 +130,7 @@ export class EventModel {
     }
 
     return {
-      eventId: rawEvent.Id,
+      eventId: IdConverters.toEventId(rawEvent.Id),
       changes,
       changeCount: changes.length
     };
@@ -137,7 +138,7 @@ export class EventModel {
 
   // Update existing event and detect changes
   async updateEvent(rawEvent: RawEventData): Promise<EventChanges | null> {
-    const existingEvent = await this.getEventById(rawEvent.Id);
+    const existingEvent = await this.getEventById(IdConverters.toEventId(rawEvent.Id));
     if (!existingEvent) {
       throw new Error(`Event with ID ${rawEvent.Id} not found`);
     }
@@ -166,7 +167,7 @@ export class EventModel {
 
   // Upsert event (insert or update)
   async upsertEvent(rawEvent: RawEventData): Promise<{ action: 'inserted' | 'updated'; changes?: EventChanges }> {
-    const existingEvent = await this.getEventById(rawEvent.Id);
+    const existingEvent = await this.getEventById(IdConverters.toEventId(rawEvent.Id));
     
     if (!existingEvent) {
       await this.insertEvent(rawEvent);
@@ -238,13 +239,13 @@ export class EventModel {
   }
 
   // Update last_checked timestamp for events (without affecting updated_at)
-  async updateLastChecked(eventIds: number[]): Promise<void> {
+  async updateLastChecked(eventIds: EventId[]): Promise<void> {
     if (eventIds.length === 0) return;
     
     await prisma.raw_events.updateMany({
       where: {
         id: {
-          in: eventIds
+          in: eventIds.map(id => IdConverters.fromEventId(id))
         }
       },
       data: {
@@ -254,14 +255,14 @@ export class EventModel {
   }
 
   // Mark events as no longer found on their scheduled day
-  async markEventsNoLongerFound(eventIds: number[]): Promise<void> {
+  async markEventsNoLongerFound(eventIds: EventId[]): Promise<void> {
     if (eventIds.length === 0) return;
     
     const now = new Date();
     await prisma.raw_events.updateMany({
       where: {
         id: {
-          in: eventIds
+          in: eventIds.map(id => IdConverters.fromEventId(id))
         }
       },
       data: {
@@ -272,13 +273,13 @@ export class EventModel {
   }
 
   // Clear the no_longer_found_at timestamp when event is found again
-  async clearNoLongerFound(eventIds: number[]): Promise<void> {
+  async clearNoLongerFound(eventIds: EventId[]): Promise<void> {
     if (eventIds.length === 0) return;
     
     await prisma.raw_events.updateMany({
       where: {
         id: {
-          in: eventIds
+          in: eventIds.map(id => IdConverters.fromEventId(id))
         }
       },
       data: {
@@ -289,13 +290,13 @@ export class EventModel {
   }
 
   // Get events for a specific date
-  async getEventsForDate(date: Date): Promise<{id: number; no_longer_found_at: Date | null}[]> {
+  async getEventsForDate(date: Date): Promise<{id: EventId; no_longer_found_at: Date | null}[]> {
     const dateStr = date.toISOString().split('T')[0];
     const nextDay = new Date(date);
     nextDay.setDate(nextDay.getDate() + 1);
     const nextDayStr = nextDay.toISOString().split('T')[0];
 
-    return await prisma.raw_events.findMany({
+    const results = await prisma.raw_events.findMany({
       where: {
         event_start: {
           gte: dateStr,
@@ -307,5 +308,10 @@ export class EventModel {
         no_longer_found_at: true
       }
     });
+    
+    return results.map(result => ({
+      id: IdConverters.toEventId(result.id),
+      no_longer_found_at: result.no_longer_found_at
+    }));
   }
 }

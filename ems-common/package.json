@@ -1,0 +1,24 @@
+{
+  "name": "@timothyw/ems-scraper-types",
+  "description": "Types and utilities for ems-scraper",
+  "author": "Timothy Washburn",
+  "version": "1.0.6",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "prepublishOnly": "npm run build",
+    "publish:patch": "npm version patch --no-git-tag-version && npm publish",
+    "publish:minor": "npm version minor --no-git-tag-version && npm publish"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "devDependencies": {
+    "typescript": "^5.5.3"
+  },
+  "license": "ISC",
+  "dependencies": {
+    "zod": "^3.24.3"
+  }
+}

@@ -1,8 +1,11 @@
 import express, { Router, Request, Response, NextFunction, RequestHandler } from 'express';
 import { ApiEndpoint, ApiRequest, ApiResponse, AuthType, ErrorCode } from '@/types/api-types';
 import { statusEndpoint } from '@/api/misc/status';
-import { scraperTestEndpoint } from '@/api/misc/scraper-test';
 import { getViolationsEndpoint } from '@/api/monitor/get-violations';
+import { getEventsEndpoint } from '@/api/events/get-events';
+import { getEventByIdEndpoint } from '@/api/events/get-event-by-id';
+import { getGroupsEndpoint } from '@/api/groups/get-groups';
+import { getDailyAvailabilityEndpoint } from '@/api/availability/daily-availability';
 import { TokenService } from '@/services/token-service';
 
 export default class ApiManager {
@@ -16,12 +19,20 @@ export default class ApiManager {
     }
 
     private registerEndpoints() {
-        // Status endpoints
         this.addEndpoint(statusEndpoint);
-        this.addEndpoint(scraperTestEndpoint);
-        
+
         // Monitoring endpoints
         this.addEndpoint(getViolationsEndpoint);
+        
+        // Event endpoints
+        this.addEndpoint(getEventsEndpoint);
+        this.addEndpoint(getEventByIdEndpoint);
+        
+        // Group endpoints
+        this.addEndpoint(getGroupsEndpoint);
+        
+        // Availability endpoints
+        this.addEndpoint(getDailyAvailabilityEndpoint);
         
         console.log(`registered api endpoints`);
     }

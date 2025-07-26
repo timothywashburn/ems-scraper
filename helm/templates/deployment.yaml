@@ -37,11 +37,11 @@ spec:
               key: root-password
         resources:
           requests:
-            memory: "128Mi"
-            cpu: "100m"
-          limits:
             memory: "256Mi"
             cpu: "200m"
+          limits:
+            memory: "512Mi"
+            cpu: "400m"
 #         livenessProbe: # TODO: re-enable when api is working
 #           httpGet:
 #             path: /api/status

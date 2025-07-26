@@ -7,6 +7,7 @@ import { ScraperService } from '@/services/scraper-service';
 import { HISTORICAL_SCRAPER_CONFIG } from '@/config/historical-scraper-config';
 import { CONTINUOUS_SCRAPER_CONFIG } from '@/config/continuous-scraper-config';
 import { TokenService } from '@/services/token-service';
+import { scriptManager } from '@/controllers/script-manager';
 
 const app = express();
 const PORT = 3000;
@@ -22,6 +23,9 @@ const startServer = async () => {
         
         // Ensure initial API token exists
         await TokenService.getInstance().ensureInitialTokenExists();
+        
+        // Run scripts for empty tables
+        await scriptManager.runAllScripts();
         
         // Initialize scraper service
         const scraper = new ScraperService();

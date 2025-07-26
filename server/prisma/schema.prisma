@@ -51,6 +51,10 @@ model raw_events {
   status_id               Int
   status_type_id          Int
   web_user_is_owner       Boolean
+  
+  roomRel                 rel_rooms      @relation(fields: [room_id], references: [room_id])
+  buildingRel             rel_buildings  @relation(fields: [building_id], references: [building_id])
+  roomTypeRel             rel_room_types @relation(fields: [room_type_id], references: [room_type_id])
 
   @@index([building_id], map: "idx_building_id")
   @@index([event_start, event_end], map: "idx_date_range")
@@ -80,4 +84,34 @@ model scraper_state {
   updated_at   DateTime @default(now()) @db.Timestamp(0)
 
   @@index([scraper_type], map: "idx_scraper_type")
+}
+
+model rel_rooms {
+  room_id       Int         @id
+  room_name     String      @db.VarChar(255)
+  building_id   Int
+  room_type_id  Int
+  
+  rawEventsRel  raw_events[]
+  buildingRel   rel_buildings  @relation(fields: [building_id], references: [building_id])
+  roomTypeRel   rel_room_types @relation(fields: [room_type_id], references: [room_type_id])
+
+  @@index([building_id], map: "idx_rooms_building_id")
+  @@index([room_type_id], map: "idx_rooms_room_type_id")
+}
+
+model rel_buildings {
+  building_id   Int         @id
+  building_name String      @db.VarChar(255)
+  
+  rawEventsRel  raw_events[]
+  roomsRel      rel_rooms[]
+}
+
+model rel_room_types {
+  room_type_id   Int         @id
+  room_type_name String      @db.VarChar(255)
+  
+  rawEventsRel   raw_events[]
+  roomsRel       rel_rooms[]
 }

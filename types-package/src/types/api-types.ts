@@ -75,23 +75,12 @@ export interface GetGroupsResponse {
 export interface GetDailyAvailabilityResponse {
   date: string;
   rooms: Array<{
-    room_id: number;
     room_name: string;
-    room_code: string;
-    building_id: number;
-    building_name: string;
-    room_type_id: number;
     room_type: string;
-    availability_windows: Array<{
+    building_name: string;
+    availability: Array<{
       start_time: string;
       end_time: string;
-    }>;
-    bookings: Array<{
-      event_id: number;
-      event_name: string;
-      start_time: string;
-      end_time: string;
-      group_name: string;
     }>;
   }>;
 }

@@ -5,7 +5,7 @@ import { prisma } from '@/lib/prisma';
 export const getDailyAvailabilityEndpoint: ApiEndpoint<undefined, GetDailyAvailabilityResponse> = {
   method: 'get',
   path: '/api/availability/daily',
-  auth: AuthType.NONE,
+  auth: AuthType.AUTHENTICATED,
   handler: async (req, res) => {
     try {
       const { date } = req.query;

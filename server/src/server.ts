@@ -10,7 +10,7 @@ import { TokenService } from '@/services/token-service';
 import { scriptManager } from '@/controllers/script-manager';
 
 const app = express();
-const PORT = 3000;
+const PORT = 3100;
 
 app.use(cors());
 app.use(express.json());

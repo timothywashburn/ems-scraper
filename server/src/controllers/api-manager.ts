@@ -6,6 +6,8 @@ import { getEventsEndpoint } from '@/api/events/get-events';
 import { getEventByIdEndpoint } from '@/api/events/get-event-by-id';
 import { getGroupsEndpoint } from '@/api/groups/get-groups';
 import { getDailyAvailabilityEndpoint } from '@/api/availability/daily-availability';
+import { getWeeklyAvailabilityEndpoint } from '@/api/availability/weekly-availability';
+import { getMonthlyAvailabilityEndpoint } from '@/api/availability/monthly-availability';
 import { TokenService } from '@/services/token-service';
 
 export default class ApiManager {
@@ -33,6 +35,8 @@ export default class ApiManager {
         
         // Availability endpoints
         this.addEndpoint(getDailyAvailabilityEndpoint);
+        this.addEndpoint(getWeeklyAvailabilityEndpoint);
+        this.addEndpoint(getMonthlyAvailabilityEndpoint);
         
         console.log(`registered api endpoints`);
     }

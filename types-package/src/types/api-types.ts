@@ -84,3 +84,14 @@ export interface GetDailyAvailabilityResponse {
     }>;
   }>;
 }
+
+export interface GetWeeklyAvailabilityResponse {
+  week_start: string;
+  days: GetDailyAvailabilityResponse[];
+}
+
+export interface GetMonthlyAvailabilityResponse {
+  month: string;
+  year: number;
+  days: GetDailyAvailabilityResponse[];
+}

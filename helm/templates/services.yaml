@@ -7,6 +7,6 @@ spec:
   selector:
     app: ems-scraper
   ports:
-  - port: 3000
-    targetPort: 3000
+  - port: 3100
+    targetPort: 3100
   type: ClusterIP

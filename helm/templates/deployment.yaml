@@ -21,7 +21,7 @@ spec:
         image: {{ .Values.image.registry }}:{{ .Values.image.tag }}
         imagePullPolicy: {{ .Values.image.pullPolicy }}
         ports:
-        - containerPort: 3000
+        - containerPort: 3100
         env:
         - name: NODE_ENV
           value: "production"
@@ -42,15 +42,15 @@ spec:
           limits:
             memory: "512Mi"
             cpu: "400m"
-#         livenessProbe: # TODO: re-enable when api is working
-#           httpGet:
-#             path: /api/status
-#             port: 3000
-#           initialDelaySeconds: 30
-#           periodSeconds: 10
-#         readinessProbe:
-#           httpGet:
-#             path: /api/status
-#             port: 3000
-#           initialDelaySeconds: 5
-#           periodSeconds: 5
+        livenessProbe:
+          httpGet:
+            path: /api/status
+            port: 3100
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /api/status
+            port: 3100
+          initialDelaySeconds: 5
+          periodSeconds: 5

@@ -2,7 +2,8 @@ import { ScraperClient } from './scraper-client';
 import { getUpcomingEndDate } from '@/utils/date-helpers';
 import { ScraperStateModel } from '@/models/scraper-state-model';
 import { CONTINUOUS_SCRAPER_CONFIG } from '@/config/continuous-scraper-config';
-import { IdConverters, RawEventData } from "@timothyw/ems-scraper-types";
+import { IdConverters, RawEventData, UcsdApiEventData } from "@timothyw/ems-scraper-types";
+import { EventModel } from "@/models/event-model";
 
 export class ContinuousScraper extends ScraperClient {
     private scraperStateModel: ScraperStateModel;
@@ -15,7 +16,7 @@ export class ContinuousScraper extends ScraperClient {
         this.scraperStateModel = new ScraperStateModel();
     }
 
-    private async processEvents(events: RawEventData[], isDryRun: boolean): Promise<{
+    private async processEvents(events: UcsdApiEventData[]): Promise<{
         inserted: number;
         updated: number;
         totalChanges: number;
@@ -25,31 +26,15 @@ export class ContinuousScraper extends ScraperClient {
         let totalChanges = 0;
 
         for (const event of events) {
-            if (isDryRun) {
-                const existingEvent = await this.eventModel.getEventById(IdConverters.toEventId(event.Id));
-                if (existingEvent) {
-                    const changes = await this.eventModel.detectChanges(event, existingEvent);
-                    if (changes && changes.changes.length > 0) {
-                        console.log(`🔍 DRY RUN: Event ${event.Id} would have ${changes.changes.length} changes:`);
-                        this.logEventChanges(changes.changes);
-                        totalChanges += changes.changeCount;
-                        updated++;
-                    }
-                } else {
-                    console.log(`🔍 DRY RUN: Event ${event.Id} would be inserted (new)`);
-                    inserted++;
-                }
+            const result = await EventModel.upsertEvent(event);
+            if (result.action === 'inserted') {
+                inserted++;
             } else {
-                const result = await this.eventModel.upsertEvent(event);
-                if (result.action === 'inserted') {
-                    inserted++;
-                } else {
-                    updated++;
-                    if (result.changes && result.changes.changes.length > 0) {
-                        console.log(`🔄 Event ${event.Id} changed (${result.changes.changes.length} fields):`);
-                        this.logEventChanges(result.changes.changes);
-                        totalChanges += result.changes.changeCount;
-                    }
+                updated++;
+                if (result.changes && result.changes.changes.length > 0) {
+                    console.log(`🔄 Event ${event.Id} changed (${result.changes.changes.length} fields) - archived to history:`);
+                    this.logEventChanges(result.changes.changes);
+                    totalChanges += result.changes.changeCount;
                 }
             }
         }
@@ -64,14 +49,13 @@ export class ContinuousScraper extends ScraperClient {
     }
 
     private async getEventsForDate(date: Date): Promise<any[]> {
-        return await this.eventModel.getEventsForDate(date);
+        return await EventModel.getEventsForDate(date);
     }
 
     private async scrapeEvents(date: Date): Promise<void> {
         try {
-            const isDryRun = CONTINUOUS_SCRAPER_CONFIG.CONTINUOUS_SCRAPER_DRY_RUN;
             const dateStr = date.toISOString().split('T')[0];
-            console.log(`\n=== Continuous scraping ${dateStr}${isDryRun ? ' (DRY RUN)' : ''} ===`);
+            console.log(`\n=== Continuous scraping ${dateStr} ===`);
 
             // Get events that were previously found for this date
             const previouslyFoundEvents = await this.getEventsForDate(date);
@@ -82,19 +66,16 @@ export class ContinuousScraper extends ScraperClient {
             const currentEventIds = new Set(result.events.map(e => e.Id));
 
             if (eventCount > 0) {
-                const processResults = await this.processEvents(result.events, isDryRun);
+                const processResults = await this.processEvents(result.events);
 
-                const modePrefix = isDryRun ? '🔍 DRY RUN: Processed' : '✓ Processed';
                 const changesSummary = processResults.totalChanges > 0 ?
                     `(${processResults.inserted} new, ${processResults.updated} updated, ${processResults.totalChanges} changes)` :
                     `(${processResults.inserted} new, ${processResults.updated} updated, no changes)`;
 
-                console.log(`${modePrefix} ${eventCount} events ${changesSummary}`);
+                console.log(`✓ Processed ${eventCount} events ${changesSummary}`);
 
-                if (!isDryRun) {
-                    const eventIds = result.events.map(e => IdConverters.toEventId(e.Id));
-                    await this.eventModel.updateLastChecked(eventIds);
-                }
+                const eventIds = result.events.map(e => IdConverters.toEventId(e.Id));
+                await EventModel.updateLastChecked(eventIds);
             } else {
                 console.log('✓ No events found for this date');
             }
@@ -107,28 +88,18 @@ export class ContinuousScraper extends ScraperClient {
             });
 
             if (noLongerFoundIds.length > 0) {
-                if (isDryRun) {
-                    console.log(`🔍 DRY RUN: Would mark ${noLongerFoundIds.length} events as no longer found: [${noLongerFoundIds.join(', ')}]`);
-                } else {
-                    await this.eventModel.markEventsNoLongerFound(noLongerFoundIds.map(id => IdConverters.toEventId(id)));
-                    console.log(`❌ Marked ${noLongerFoundIds.length} events as no longer found: [${noLongerFoundIds.join(', ')}]`);
+                const actuallyMarkedCount = await EventModel.markEventsNoLongerFound(noLongerFoundIds.map(id => IdConverters.toEventId(id)));
+                if (actuallyMarkedCount > 0) {
+                    console.log(`❌ Marked ${actuallyMarkedCount} events as no longer found: [${noLongerFoundIds.join(', ')}]`);
                 }
             }
 
             if (foundAgainIds.length > 0) {
-                if (isDryRun) {
-                    console.log(`🔍 DRY RUN: Would clear no-longer-found status for ${foundAgainIds.length} events: [${foundAgainIds.join(', ')}]`);
-                } else {
-                    await this.eventModel.clearNoLongerFound(foundAgainIds.map(id => IdConverters.toEventId(id)));
-                    console.log(`✅ Cleared no-longer-found status for ${foundAgainIds.length} events: [${foundAgainIds.join(', ')}]`);
-                }
+                await EventModel.clearNoLongerFound(foundAgainIds.map(id => IdConverters.toEventId(id)));
+                console.log(`✅ Cleared no-longer-found status for ${foundAgainIds.length} events: [${foundAgainIds.join(', ')}]`);
             }
 
-            if (!isDryRun) {
-                await this.scraperStateModel.updateScraperState(this.SCRAPER_TYPE, date);
-            } else {
-                console.log(`🔍 DRY RUN: Would update scraper state to ${dateStr}`);
-            }
+            await this.scraperStateModel.updateScraperState(this.SCRAPER_TYPE, date);
 
         } catch (error) {
             console.error(`Failed to scrape ${date.toISOString().split('T')[0]}:`, error);
@@ -176,8 +147,7 @@ export class ContinuousScraper extends ScraperClient {
         this.isRunning = true;
         this.shouldStop = false;
 
-        const isDryRun = CONTINUOUS_SCRAPER_CONFIG.CONTINUOUS_SCRAPER_DRY_RUN;
-        console.log(`🚀 Starting continuous scraper${isDryRun ? ' (DRY RUN MODE)' : ''}...`);
+        console.log('🚀 Starting continuous scraper...');
         console.log('📅 Will scrape 6-month rolling window continuously');
 
         let currentDate = await this.getStoredScrapingDate();

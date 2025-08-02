@@ -9,13 +9,9 @@ import {
   GroupId
 } from './id-types';
 
-// Strongly-typed event interface using branded IDs
-export interface TypedEvent {
+// Base event data containing core fields
+export interface EventData {
   id: EventId;
-  created_at: Date | null;
-  updated_at: Date | null;
-  last_checked: Date | null;
-  no_longer_found_at: Date | null;
   event_name: string;
   event_start: string;
   event_end: string;
@@ -41,6 +37,26 @@ export interface TypedEvent {
   status_type_id: StatusTypeId;
   web_user_is_owner: boolean;
 }
+
+// Current event data with metadata and version tracking
+export interface RawEventData extends EventData {
+  version_number: number;
+  created_at: Date | null;
+  updated_at: Date | null;
+  last_checked: Date | null;
+  no_longer_found_at: Date | null;
+}
+
+// Historical event data (archived versions)
+export interface RawHistoricalEventData extends EventData {
+  history_id: number;
+  version_number: number;
+  archived_at: Date;
+  change_count: number;
+}
+
+// Strongly-typed event interface using branded IDs (alias for backward compatibility)
+export interface TypedEvent extends RawEventData {}
 
 // Location-related types
 export interface BuildingInfo {
@@ -95,8 +111,8 @@ export interface AvailabilityQuery {
   required_capacity?: number;
 }
 
-// Raw event data from UCSD API
-export interface RawEventData {
+// Raw API event data from UCSD (before processing)
+export interface UcsdApiEventData {
   // All the raw fields from the API (for reference)
   InternalId: number;
   EventCount: number;

@@ -1,10 +1,7 @@
 // Continuous scraper configuration constants
 export const CONTINUOUS_SCRAPER_CONFIG = {
     // Enable/disable flag
-    RUN_CONTINUOUS_SCRAPER: true,
-
-    // Dry run mode
-    CONTINUOUS_SCRAPER_DRY_RUN: true,
+    RUN_CONTINUOUS_SCRAPER: false,
 
     // Rate limiting settings (can be overridden per scraper)
     REQUEST_DELAY_MS: 5000,

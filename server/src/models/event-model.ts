@@ -1,7 +1,6 @@
 import { prisma } from '@/lib/prisma';
-import { EventChanges, RawEventData } from '@/types/event-types';
-import { EventId, IdConverters } from '@timothyw/ems-scraper-types';
-import { raw_events } from '@prisma/client';
+import { EventChanges, UcsdApiEventData, EventId, IdConverters } from '@timothyw/ems-scraper-types';
+import { raw_events, raw_events_history } from '@prisma/client';
 
 // Expected constant field values for monitoring
 const EXPECTED_CONSTANTS: Record<string, string> = {
@@ -45,11 +44,11 @@ const EXPECTED_CONSTANTS: Record<string, string> = {
 } as const;
 
 export class EventModel {
-    constructor() {
+    private constructor() {
     }
 
     // Transform raw API data to database format - store dates as raw strings
-    private transformRawEvent(raw: RawEventData): Omit<raw_events, 'created_at' | 'updated_at' | 'last_checked' | 'no_longer_found_at'> {
+    private static transformRawEvent(raw: UcsdApiEventData): Omit<raw_events, 'version_number' | 'created_at' | 'updated_at' | 'last_checked' | 'no_longer_found_at'> {
         return {
             id: IdConverters.fromEventId(IdConverters.toEventId(raw.Id)),
             event_name: raw.EventName,
@@ -80,13 +79,14 @@ export class EventModel {
     }
 
     // Insert new event
-    async insertEvent(rawEvent: RawEventData): Promise<void> {
-        const event = this.transformRawEvent(rawEvent);
+    static async insertEvent(rawEvent: UcsdApiEventData): Promise<void> {
+        const event = EventModel.transformRawEvent(rawEvent);
         const now = new Date();
 
         await prisma.raw_events.create({
             data: {
                 ...event,
+                version_number: 1,
                 created_at: now,
                 updated_at: now,
                 last_checked: now
@@ -95,19 +95,19 @@ export class EventModel {
     }
 
     // Check if event exists and get current data
-    async getEventById(id: EventId): Promise<raw_events | null> {
+    static async getEventById(id: EventId): Promise<raw_events | null> {
         return await prisma.raw_events.findUnique({
             where: { id: IdConverters.fromEventId(id) }
         });
     }
 
     // Detect changes without updating (for dry run analysis)
-    async detectChanges(rawEvent: RawEventData, existingEvent: raw_events): Promise<EventChanges | null> {
-        const newEvent = this.transformRawEvent(rawEvent);
+    static async detectChanges(rawEvent: UcsdApiEventData, existingEvent: raw_events): Promise<EventChanges | null> {
+        const newEvent = EventModel.transformRawEvent(rawEvent);
         const changes: EventChanges['changes'] = [];
 
-        // Compare all fields except metadata
-        const fieldsToCompare: (keyof Omit<raw_events, 'created_at' | 'updated_at' | 'last_checked' | 'no_longer_found_at'>)[] = [
+        // Compare all fields except metadata and version
+        const fieldsToCompare: (keyof Omit<raw_events, 'version_number' | 'created_at' | 'updated_at' | 'last_checked' | 'no_longer_found_at'>)[] = [
             'id', 'event_name', 'event_start', 'event_end', 'gmt_start', 'gmt_end',
             'time_booking_start', 'time_booking_end', 'is_all_day_event', 'timezone_abbreviation',
             'building', 'building_id', 'room', 'room_id', 'room_code', 'room_type', 'room_type_id',
@@ -137,27 +137,78 @@ export class EventModel {
         };
     }
 
+    // Archive current event data to history before updating
+    private static async archiveEventToHistory(existingEvent: raw_events, changes: EventChanges): Promise<void> {
+        // Get the current highest version number for this event
+        const latestHistoryRecord = await prisma.raw_events_history.findFirst({
+            where: { event_id: existingEvent.id },
+            orderBy: { version_number: 'desc' },
+            select: { version_number: true }
+        });
+
+        const nextVersionNumber = latestHistoryRecord ? latestHistoryRecord.version_number + 1 : 1;
+
+        // Archive the current data before it gets updated
+        await prisma.raw_events_history.create({
+            data: {
+                event_id: existingEvent.id,
+                version_number: nextVersionNumber,
+                change_count: changes.changeCount,
+                
+                // Snapshot of all current event data
+                event_name: existingEvent.event_name,
+                event_start: existingEvent.event_start,
+                event_end: existingEvent.event_end,
+                gmt_start: existingEvent.gmt_start,
+                gmt_end: existingEvent.gmt_end,
+                time_booking_start: existingEvent.time_booking_start,
+                time_booking_end: existingEvent.time_booking_end,
+                is_all_day_event: existingEvent.is_all_day_event,
+                timezone_abbreviation: existingEvent.timezone_abbreviation,
+                building: existingEvent.building,
+                building_id: existingEvent.building_id,
+                room: existingEvent.room,
+                room_id: existingEvent.room_id,
+                room_code: existingEvent.room_code,
+                room_type: existingEvent.room_type,
+                room_type_id: existingEvent.room_type_id,
+                location: existingEvent.location,
+                location_link: existingEvent.location_link,
+                group_name: existingEvent.group_name,
+                reservation_id: existingEvent.reservation_id,
+                reservation_summary_url: existingEvent.reservation_summary_url,
+                status_id: existingEvent.status_id,
+                status_type_id: existingEvent.status_type_id,
+                web_user_is_owner: existingEvent.web_user_is_owner
+            }
+        });
+    }
+
     // Update existing event and detect changes
-    async updateEvent(rawEvent: RawEventData): Promise<EventChanges | null> {
-        const existingEvent = await this.getEventById(IdConverters.toEventId(rawEvent.Id));
+    static async updateEvent(rawEvent: UcsdApiEventData): Promise<EventChanges | null> {
+        const existingEvent = await EventModel.getEventById(IdConverters.toEventId(rawEvent.Id));
         if (!existingEvent) {
             throw new Error(`Event with ID ${rawEvent.Id} not found`);
         }
 
-        const changes = await this.detectChanges(rawEvent, existingEvent);
+        const changes = await EventModel.detectChanges(rawEvent, existingEvent);
 
         // If no changes, return null
         if (!changes) {
             return null;
         }
 
-        // Update the event
-        const newEvent = this.transformRawEvent(rawEvent);
+        // Archive the current data to history before updating
+        await EventModel.archiveEventToHistory(existingEvent, changes);
+
+        // Update the event with incremented version
+        const newEvent = EventModel.transformRawEvent(rawEvent);
         const now = new Date();
         await prisma.raw_events.update({
             where: { id: newEvent.id },
             data: {
                 ...newEvent,
+                version_number: existingEvent.version_number + 1,
                 updated_at: now,
                 last_checked: now
             }
@@ -167,20 +218,20 @@ export class EventModel {
     }
 
     // Upsert event (insert or update)
-    async upsertEvent(rawEvent: RawEventData): Promise<{ action: 'inserted' | 'updated'; changes?: EventChanges }> {
-        const existingEvent = await this.getEventById(IdConverters.toEventId(rawEvent.Id));
+    static async upsertEvent(rawEvent: UcsdApiEventData): Promise<{ action: 'inserted' | 'updated'; changes?: EventChanges }> {
+        const existingEvent = await EventModel.getEventById(IdConverters.toEventId(rawEvent.Id));
 
         if (!existingEvent) {
-            await this.insertEvent(rawEvent);
+            await EventModel.insertEvent(rawEvent);
             return { action: 'inserted' };
         } else {
-            const changes = await this.updateEvent(rawEvent);
+            const changes = await EventModel.updateEvent(rawEvent);
             return { action: 'updated', changes: changes || undefined };
         }
     }
 
     // Bulk upsert for performance
-    async bulkUpsertEvents(rawEvents: RawEventData[]): Promise<{
+    static async bulkUpsertEvents(rawEvents: UcsdApiEventData[]): Promise<{
         inserted: number;
         updated: number;
         totalChanges: number;
@@ -190,7 +241,7 @@ export class EventModel {
         let totalChanges = 0;
 
         for (const rawEvent of rawEvents) {
-            const result = await this.upsertEvent(rawEvent);
+            const result = await EventModel.upsertEvent(rawEvent);
             if (result.action === 'inserted') {
                 inserted++;
             } else {
@@ -205,7 +256,7 @@ export class EventModel {
     }
 
     // Monitor constant fields for violations and log them
-    async checkConstantFields(rawEvent: RawEventData): Promise<string[]> {
+    static async checkConstantFields(rawEvent: UcsdApiEventData): Promise<string[]> {
         const violations: string[] = [];
 
         for (const [fieldName, expectedValue] of Object.entries(EXPECTED_CONSTANTS)) {
@@ -240,7 +291,7 @@ export class EventModel {
     }
 
     // Update last_checked timestamp for events (without affecting updated_at)
-    async updateLastChecked(eventIds: EventId[]): Promise<void> {
+    static async updateLastChecked(eventIds: EventId[]): Promise<void> {
         if (eventIds.length === 0) return;
 
         await prisma.raw_events.updateMany({
@@ -256,25 +307,28 @@ export class EventModel {
     }
 
     // Mark events as no longer found on their scheduled day
-    async markEventsNoLongerFound(eventIds: EventId[]): Promise<void> {
-        if (eventIds.length === 0) return;
+    static async markEventsNoLongerFound(eventIds: EventId[]): Promise<number> {
+        if (eventIds.length === 0) return 0;
 
         const now = new Date();
-        await prisma.raw_events.updateMany({
+        const result = await prisma.raw_events.updateMany({
             where: {
                 id: {
                     in: eventIds.map(id => IdConverters.fromEventId(id))
-                }
+                },
+                no_longer_found_at: null // Only update events that haven't been marked yet
             },
             data: {
                 no_longer_found_at: now,
                 last_checked: now
             }
         });
+
+        return result.count;
     }
 
     // Clear the no_longer_found_at timestamp when event is found again
-    async clearNoLongerFound(eventIds: EventId[]): Promise<void> {
+    static async clearNoLongerFound(eventIds: EventId[]): Promise<void> {
         if (eventIds.length === 0) return;
 
         await prisma.raw_events.updateMany({
@@ -291,7 +345,7 @@ export class EventModel {
     }
 
     // Get events for a specific date
-    async getEventsForDate(date: Date): Promise<{ id: EventId; no_longer_found_at: Date | null }[]> {
+    static async getEventsForDate(date: Date): Promise<{ id: EventId; no_longer_found_at: Date | null }[]> {
         const dateStr = date.toISOString().split('T')[0];
         const nextDay = new Date(date);
         nextDay.setDate(nextDay.getDate() + 1);
@@ -315,4 +369,25 @@ export class EventModel {
             no_longer_found_at: result.no_longer_found_at
         }));
     }
+
+    // Get historical versions of an event
+    static async getEventHistory(eventId: EventId): Promise<raw_events_history[]> {
+        const results = await prisma.raw_events_history.findMany({
+            where: { event_id: IdConverters.fromEventId(eventId) },
+            orderBy: { version_number: 'desc' }
+        });
+
+        return results;
+    }
+
+    // Get the latest N changes across all events
+    static async getRecentChanges(limit: number = 50): Promise<raw_events_history[]> {
+        const results = await prisma.raw_events_history.findMany({
+            orderBy: { archived_at: 'desc' },
+            take: limit
+        });
+
+        return results;
+    }
+
 }

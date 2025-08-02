@@ -2,7 +2,7 @@
   "name": "@timothyw/ems-scraper-types",
   "description": "Types and utilities for ems-scraper",
   "author": "Timothy Washburn",
-  "version": "1.0.9",
+  "version": "1.0.12",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {

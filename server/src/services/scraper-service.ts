@@ -1,8 +1,7 @@
 import { HistoricalScraper } from './historical-scraper';
 import { ContinuousScraper } from './continuous-scraper';
 import { activityLogger } from './activity-logger';
-
-import { ScraperStats } from "@/types/scraper-types";
+import { ScraperStats } from "@timothyw/ems-scraper-types";
 
 export class ScraperService {
     private static historicalScraper: HistoricalScraper | null = null;

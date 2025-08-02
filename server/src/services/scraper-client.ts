@@ -1,6 +1,5 @@
 import { EventModel } from '@/models/event-model';
-import { RawEventData, UCSDApiResponse } from '@/types/event-types';
-import { EventsRequest, RetryConfig } from '@/types/scraper-types';
+import { UcsdApiEventData, UCSDApiResponse, EventsRequest, RetryConfig } from '@timothyw/ems-scraper-types';
 
 // Scraper client will receive config from concrete implementations
 
@@ -17,12 +16,10 @@ export abstract class ScraperClient {
     protected baseUrl = 'https://reservations.ucsd.edu/EmsWebApp';
     protected csrfToken = '';
     protected csrfTokenTimestamp = 0;
-    protected eventModel: EventModel;
     protected config: ScraperConfig;
     private readonly CSRF_TOKEN_EXPIRY_MS = 1000 * 60 * 60; // 1 hour
 
     constructor(config: ScraperConfig) {
-        this.eventModel = new EventModel();
         this.config = config;
     }
 
@@ -108,7 +105,7 @@ export abstract class ScraperClient {
     }
 
     protected async fetchEvents(date: Date, csrfToken: string): Promise<{
-        events: RawEventData[];
+        events: UcsdApiEventData[];
         requestStartTime: number
     }> {
         let requestStartTime = 0;
@@ -196,7 +193,7 @@ export abstract class ScraperClient {
             (error: Error) => error.message.includes('401') || error.message.includes('403'));
     }
 
-    async scrapeDay(date: Date): Promise<{ events: RawEventData[]; violations: string[]; requestStartTime: number }> {
+    async scrapeDay(date: Date): Promise<{ events: UcsdApiEventData[]; violations: string[]; requestStartTime: number }> {
         // Ensure we have a valid CSRF token
         if (this.isCSRFTokenExpired()) {
             await this.getCSRFToken();
@@ -217,7 +214,7 @@ export abstract class ScraperClient {
         // Check for constant field violations
         const allViolations: string[] = [];
         for (const event of filteredEvents) {
-            const violations = await this.eventModel.checkConstantFields(event);
+            const violations = await EventModel.checkConstantFields(event);
             allViolations.push(...violations);
         }
 

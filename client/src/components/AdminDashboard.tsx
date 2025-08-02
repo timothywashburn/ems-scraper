@@ -1,132 +1,51 @@
 import React, { useState, useEffect } from 'react';
-import { Activity, Calendar, LogOut, Menu, X } from 'lucide-react';
+import { Activity, Calendar, LogOut, Menu, X, Search } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
-import { ScraperStatusCard } from './scraper/ScraperStatusCard';
-import { ScraperMetrics } from './scraper/ScraperStatistics.tsx';
-import { ScraperActivityLog } from './scraper/ScraperActivityLog';
+import { useScraperStore } from '../stores/scraperStore';
+import { ScraperStatusPage } from '../pages/ScraperStatusPage';
+import { EventUpdatesPage } from '../pages/EventUpdatesPage';
+import { EventExplorerPage } from '../pages/EventExplorerPage';
 
-type DashboardView = 'scraper' | 'events';
+type DashboardView = 'scraper' | 'events' | 'explorer';
 
-interface ScraperOverview {
-  isRunning: boolean;
-  currentDate?: string;
-  lastUpdate?: string;
-  totalEvents: number;
-  eventsToday: number;
-  eventsThisWeek: number;
-  eventsThisMonth: number;
-  lastEventUpdate: string | null;
-}
-
-interface ActivityLogEntry {
-  id: string;
-  timestamp: string;
-  message: string;
-  type: 'info' | 'success' | 'error';
-}
 
 export const AdminDashboard: React.FC = () => {
   const { user, logout } = useAuth();
   const [currentView, setCurrentView] = useState<DashboardView>('scraper');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   
-  // Scraper data state
-  const [scraperOverview, setScraperOverview] = useState<ScraperOverview | null>(null);
-  const [activities, setActivities] = useState<ActivityLogEntry[]>([]);
-  const [overviewLoading, setOverviewLoading] = useState(true);
-  const [logsLoading, setLogsLoading] = useState(true);
-  const [overviewError, setOverviewError] = useState<string | null>(null);
-  const [logsError, setLogsError] = useState<string | null>(null);
-  const [lastRefresh, setLastRefresh] = useState<Date>(new Date());
-
-  // API functions
-  const fetchScraperOverview = async () => {
-    try {
-      const response = await fetch('/api/scraper/overview', {
-        headers: {
-          'Authorization': `Bearer ${user?.token}`,
-        },
-      });
-      const result = await response.json();
-      
-      if (result.success) {
-        setScraperOverview(result.data);
-        setOverviewError(null);
-      } else {
-        setOverviewError(result.error?.message || 'Failed to fetch overview');
-      }
-    } catch (error) {
-      setOverviewError('Network error');
-      console.error('Failed to fetch scraper overview:', error);
-    } finally {
-      setOverviewLoading(false);
-    }
-  };
-
-  const fetchScraperLogs = async () => {
-    try {
-      const response = await fetch('/api/scraper/logs', {
-        headers: {
-          'Authorization': `Bearer ${user?.token}`,
-        },
-      });
-      const result = await response.json();
-      
-      if (result.success) {
-        setActivities(result.data.activities);
-        setLogsError(null);
-      } else {
-        setLogsError(result.error?.message || 'Failed to fetch logs');
-      }
-    } catch (error) {
-      setLogsError('Network error');
-      console.error('Failed to fetch scraper logs:', error);
-    } finally {
-      setLogsLoading(false);
-    }
-  };
+  // Zustand store
+  const {
+    overview: scraperOverview,
+    activities,
+    overviewLoading,
+    logsLoading,
+    overviewError,
+    logsError,
+    lastRefresh,
+    controlScraper,
+    startPolling,
+    stopPolling
+  } = useScraperStore();
 
   const handleScraperControl = async (action: 'start' | 'stop') => {
-    try {
-      const response = await fetch('/api/scraper/control', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${user?.token}`,
-        },
-        body: JSON.stringify({ action }),
-      });
-      
-      const result = await response.json();
-      
-      if (result.success) {
-        // Refresh overview and logs immediately after control action
-        await Promise.all([fetchScraperOverview(), fetchScraperLogs()]);
-      } else {
-        console.error('Scraper control failed:', result.error?.message);
-      }
-    } catch (error) {
-      console.error('Scraper control error:', error);
+    if (user?.token) {
+      await controlScraper(user.token, action);
     }
   };
 
-  // Unified polling effect for real-time updates (every 2 seconds)
+  // Start/stop polling based on view and user authentication
   useEffect(() => {
-    const fetchAllData = async () => {
-      await Promise.all([
-        fetchScraperOverview(),
-        fetchScraperLogs()
-      ]);
-      setLastRefresh(new Date());
-    };
-
-    fetchAllData();
-    const interval = setInterval(fetchAllData, 2000);
+    if (user?.token && currentView === 'scraper') {
+      startPolling(user.token);
+    } else {
+      stopPolling();
+    }
 
     return () => {
-      clearInterval(interval);
+      stopPolling();
     };
-  }, []);
+  }, [user?.token, currentView, startPolling, stopPolling]);
 
   const navigation = [
     {
@@ -140,7 +59,14 @@ export const AdminDashboard: React.FC = () => {
       name: 'Event Updates',
       icon: Calendar,
       description: 'Track changes in EMS events',
-      disabled: true,
+      disabled: false,
+    },
+    {
+      id: 'explorer' as DashboardView,
+      name: 'Event Explorer',
+      icon: Search,
+      description: 'Search and explore event details and history',
+      disabled: false,
     },
   ];
 
@@ -148,59 +74,21 @@ export const AdminDashboard: React.FC = () => {
     switch (currentView) {
       case 'scraper':
         return (
-          <div className="p-6 space-y-4">
-            <div className="flex justify-between items-center">
-              <h2 className="text-2xl font-bold text-white">Scraper Status</h2>
-              <div className="text-xs text-gray-400">
-                Last refresh: {lastRefresh.toLocaleTimeString()} • Auto-refresh every 2s
-              </div>
-            </div>
-            
-            <div className="space-y-4">
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                <div>
-                  <ScraperStatusCard
-                    status={scraperOverview}
-                    isLoading={overviewLoading}
-                    error={overviewError}
-                    onStartStop={handleScraperControl}
-                  />
-                </div>
-                
-                <div>
-                  <ScraperMetrics
-                    metrics={scraperOverview}
-                    isLoading={overviewLoading}
-                    error={overviewError}
-                  />
-                </div>
-              </div>
-              
-              <div>
-                <ScraperActivityLog
-                  activities={activities}
-                  isLoading={logsLoading}
-                  error={logsError}
-                />
-              </div>
-            </div>
-          </div>
+          <ScraperStatusPage
+            scraperOverview={scraperOverview}
+            activities={activities}
+            overviewLoading={overviewLoading}
+            logsLoading={logsLoading}
+            overviewError={overviewError}
+            logsError={logsError}
+            lastRefresh={lastRefresh}
+            onScraperControl={handleScraperControl}
+          />
         );
       case 'events':
-        return (
-          <div className="p-6">
-            <h2 className="text-2xl font-bold text-white mb-6">Event Updates</h2>
-            <div className="bg-gray-800 rounded-lg shadow border border-gray-700 p-6">
-              <div className="text-center text-gray-400">
-                <Calendar className="w-12 h-12 mx-auto mb-4 text-gray-500" />
-                <p>Event tracking dashboard coming soon...</p>
-                <p className="text-sm mt-2">
-                  This will show event changes over time and help visualize EMS data trends.
-                </p>
-              </div>
-            </div>
-          </div>
-        );
+        return <EventUpdatesPage />;
+      case 'explorer':
+        return <EventExplorerPage />;
       default:
         return null;
     }

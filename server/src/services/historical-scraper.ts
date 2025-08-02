@@ -2,8 +2,9 @@ import { ScraperClient } from './scraper-client';
 import { HISTORICAL_SCRAPER_CONFIG } from '@/config/historical-scraper-config';
 import { getHistoricalEndDate } from '@/utils/date-helpers';
 
-import { ScraperStats } from "@/types/scraper-types";
+import { ScraperStats } from "@timothyw/ems-scraper-types";
 import { IdConverters } from "@timothyw/ems-scraper-types";
+import { EventModel } from "@/models/event-model";
 
 export class HistoricalScraper extends ScraperClient {
     constructor() {
@@ -40,7 +41,7 @@ export class HistoricalScraper extends ScraperClient {
                 if (result.events.length > 0) {
                     // Historical mode: check for existing events BEFORE processing
                     for (const event of result.events) {
-                        const existingEvent = await this.eventModel.getEventById(IdConverters.toEventId(event.Id));
+                        const existingEvent = await EventModel.getEventById(IdConverters.toEventId(event.Id));
                         if (existingEvent) {
                             console.error(`❌ HISTORICAL SCRAPER STOPPED: Found existing event ID ${event.Id} on ${currentDate.toISOString().split('T')[0]}`);
                             console.error(`This indicates the historical data range overlaps with existing data.`);
@@ -50,7 +51,7 @@ export class HistoricalScraper extends ScraperClient {
                     }
 
                     // If we get here, all events are new - safe to insert
-                    const batchResults = await this.eventModel.bulkUpsertEvents(result.events);
+                    const batchResults = await EventModel.bulkUpsertEvents(result.events);
                     stats.inserted += batchResults.inserted;
                     stats.updated += batchResults.updated;
                     stats.totalChanges += batchResults.totalChanges;

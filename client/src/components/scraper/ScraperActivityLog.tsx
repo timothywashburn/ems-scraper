@@ -105,7 +105,7 @@ export const ScraperActivityLog: React.FC<ScraperActivityLogProps> = ({
             ) : (
                 <div className="space-y-3 max-h-80 overflow-y-auto">
                     {activities.slice(0, 20).map((activity, index) => (
-                        <div key={`${activity.id}-${activity.timestamp}`} className="flex items-start space-x-3 p-3 rounded-md bg-gray-700/50">
+                        <div key={`${index}-${activity.timestamp}`} className="flex items-start space-x-3 p-3 rounded-md bg-gray-700/50">
                             <div className="flex-shrink-0 mt-0.5">
                                 {getIcon(activity.type)}
                             </div>

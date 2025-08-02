@@ -34,7 +34,7 @@ jobs:
           file: ./server/Dockerfile
           push: true
           platforms: linux/amd64
-          tags: ${{ env.DOCKER_IMAGE }}/server:${{ github.sha }}
+          tags: ${{ env.DOCKER_IMAGE }}-server:${{ github.sha }}
 
       - name: Build and push client
         uses: docker/build-push-action@v5
@@ -43,4 +43,4 @@ jobs:
           file: ./client/Dockerfile
           push: true
           platforms: linux/amd64
-          tags: ${{ env.DOCKER_IMAGE }}/client:${{ github.sha }}
+          tags: ${{ env.DOCKER_IMAGE }}-client:${{ github.sha }}

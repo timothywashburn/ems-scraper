@@ -154,6 +154,7 @@ export class EventModel {
                 event_id: existingEvent.id,
                 version_number: nextVersionNumber,
                 change_count: changes.changeCount,
+                last_checked: existingEvent.last_checked,
                 
                 // Snapshot of all current event data
                 event_name: existingEvent.event_name,

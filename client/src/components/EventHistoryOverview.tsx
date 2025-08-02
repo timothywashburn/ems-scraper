@@ -14,23 +14,51 @@ export const EventHistoryOverview: React.FC<Props> = ({ onEventClick }) => {
     recentChangesError,
   } = useEventsStore();
 
-  const formatTimeAgo = (dateString: string) => {
-    const date = new Date(dateString);
+  const formatTimeWindow = (lastChecked: string, archivedAt: string) => {
+    const lastCheckedDate = new Date(lastChecked);
+    const archivedDate = new Date(archivedAt);
     const now = new Date();
-    const diffMs = now.getTime() - date.getTime();
+    
+    // Calculate how long ago the window ended
+    const diffMs = now.getTime() - archivedDate.getTime();
     const diffMinutes = Math.floor(diffMs / (1000 * 60));
     const diffHours = Math.floor(diffMinutes / 60);
     const diffDays = Math.floor(diffHours / 24);
 
+    let timeAgo;
     if (diffDays > 0) {
-      return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`;
+      timeAgo = `${diffDays} day${diffDays > 1 ? 's' : ''} ago`;
     } else if (diffHours > 0) {
-      return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`;
+      timeAgo = `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`;
     } else if (diffMinutes > 0) {
-      return `${diffMinutes} minute${diffMinutes > 1 ? 's' : ''} ago`;
+      timeAgo = `${diffMinutes} minute${diffMinutes > 1 ? 's' : ''} ago`;
     } else {
-      return 'Just now';
+      timeAgo = 'Just now';
     }
+
+    // Calculate the window duration
+    const windowMs = archivedDate.getTime() - lastCheckedDate.getTime();
+    const windowMinutes = Math.floor(windowMs / (1000 * 60));
+    const windowHours = Math.floor(windowMinutes / 60);
+    const windowDays = Math.floor(windowHours / 24);
+    
+    let windowDuration;
+    if (windowDays > 0) {
+      const remainingHours = windowHours % 24;
+      if (remainingHours > 0) {
+        windowDuration = `${windowDays}d ${remainingHours}h window`;
+      } else {
+        windowDuration = `${windowDays}d window`;
+      }
+    } else if (windowHours > 0) {
+      windowDuration = `${windowHours}h window`;
+    } else if (windowMinutes > 0) {
+      windowDuration = `${windowMinutes}m window`;
+    } else {
+      windowDuration = '<1m window';
+    }
+
+    return `${timeAgo} (${windowDuration})`;
   };
 
   return (
@@ -70,7 +98,7 @@ export const EventHistoryOverview: React.FC<Props> = ({ onEventClick }) => {
               building={change.building}
               room={change.room}
               groupName={change.group_name}
-              statusLine={formatTimeAgo(change.archived_at)}
+              statusLine={formatTimeWindow(change.last_checked, change.archived_at)}
               statusColor="blue"
               bottomLine={`${change.change_count} change${change.change_count !== 1 ? 's' : ''} • Version ${change.version_number}`}
               onClick={onEventClick}

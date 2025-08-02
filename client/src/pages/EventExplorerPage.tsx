@@ -41,6 +41,7 @@ interface HistoryEntry {
   version_number: number;
   change_count: number;
   archived_at: string;
+  last_checked: string;
   event_name: string;
   event_start: string;
   event_end: string;
@@ -208,6 +209,38 @@ export const EventExplorerPage: React.FC = () => {
   const formatDateTime = (dateString: string) => {
     const date = new Date(dateString);
     return date.toLocaleString();
+  };
+
+  const formatTimeWindow = (lastChecked: string, archivedAt: string) => {
+    const lastCheckedDate = new Date(lastChecked);
+    const archivedDate = new Date(archivedAt);
+    
+    // Calculate the window duration
+    const windowMs = archivedDate.getTime() - lastCheckedDate.getTime();
+    const windowMinutes = Math.floor(windowMs / (1000 * 60));
+    const windowHours = Math.floor(windowMinutes / 60);
+    const windowDays = Math.floor(windowHours / 24);
+    
+    let windowDuration;
+    if (windowDays > 0) {
+      const remainingHours = windowHours % 24;
+      const remainingMinutes = windowMinutes % 60;
+      if (remainingHours > 0) {
+        windowDuration = `${windowDays}d ${remainingHours}h`;
+      } else if (remainingMinutes > 0) {
+        windowDuration = `${windowDays}d ${remainingMinutes}m`;
+      } else {
+        windowDuration = `${windowDays}d`;
+      }
+    } else if (windowHours > 0) {
+      windowDuration = `${windowHours}h ${windowMinutes % 60}m`;
+    } else if (windowMinutes > 0) {
+      windowDuration = `${windowMinutes}m`;
+    } else {
+      windowDuration = '<1m';
+    }
+
+    return `Updated within ${windowDuration} window (${formatDateTime(lastChecked)} - ${formatDateTime(archivedAt)})`;
   };
 
   const formatEventTime = (startTime: string, endTime: string) => {
@@ -389,6 +422,7 @@ export const EventExplorerPage: React.FC = () => {
     // Add history metadata for history entries
     if ('archived_at' in data) {
       fields.push(
+        { key: 'last_checked', label: 'Last Checked', group: 'Metadata' },
         { key: 'archived_at', label: 'Archived At', group: 'Metadata' },
         { key: 'change_count', label: 'Change Count', group: 'Metadata' }
       );
@@ -700,7 +734,7 @@ export const EventExplorerPage: React.FC = () => {
                           {historyEntry.change_count} change{historyEntry.change_count !== 1 ? 's' : ''}
                         </span>
                         <span className="text-xs text-gray-500">
-                          {formatDateTime(historyEntry.archived_at)}
+                          {formatTimeWindow(historyEntry.last_checked, historyEntry.archived_at)}
                         </span>
                       </div>
                       <div className="text-sm text-purple-400">
@@ -749,7 +783,17 @@ export const EventExplorerPage: React.FC = () => {
                               <ChevronRight className="w-3 h-3" />
                             )}
                             <Database className="w-3 h-3" />
-                            <span>Raw Details (Version {historyEntry.version_number})</span>
+                            <span>Raw Details ({(() => {
+                              const historyFields = [
+                                'id', 'event_name', 'event_start', 'event_end', 'gmt_start', 'gmt_end',
+                                'time_booking_start', 'time_booking_end', 'is_all_day_event', 'timezone_abbreviation',
+                                'building', 'building_id', 'room', 'room_id', 'room_code', 'room_type', 'room_type_id',
+                                'location', 'location_link', 'group_name', 'reservation_id', 'reservation_summary_url',
+                                'status_id', 'status_type_id', 'web_user_is_owner', 'version_number', 'last_checked',
+                                'archived_at', 'change_count'
+                              ];
+                              return historyFields.length;
+                            })()} fields)</span>
                           </button>
                           
                           {expandedRawVersions.has(historyEntry.version_number) && (

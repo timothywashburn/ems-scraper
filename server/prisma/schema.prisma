@@ -72,6 +72,7 @@ model raw_events_history {
   event_id                Int
   version_number          Int
   archived_at             DateTime  @default(now()) @db.Timestamp(0)
+  last_checked            DateTime  @db.Timestamp(0)
   change_count            Int       @default(0)
 
   // All the original event fields (snapshot of the data before change)

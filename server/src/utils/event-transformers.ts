@@ -48,6 +48,7 @@ export function transformHistoryEventToTyped(historyEvent: raw_events_history): 
         id: IdConverters.toEventId(historyEvent.event_id),
         version_number: historyEvent.version_number,
         archived_at: historyEvent.archived_at,
+        last_checked: historyEvent.last_checked,
         change_count: historyEvent.change_count,
         event_name: historyEvent.event_name,
         event_start: historyEvent.event_start,

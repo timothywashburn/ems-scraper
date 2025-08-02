@@ -17,6 +17,7 @@ interface RecentChange {
   version_number: number;
   change_count: number;
   archived_at: string;
+  last_checked: string;
   event_name: string;
   event_start: string;
   event_end: string;

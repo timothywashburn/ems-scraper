@@ -27,7 +27,7 @@ jobs:
           context: ./client
           push: true
           platforms: linux/amd64
-          tags: kyrokrypt/ems-scraper/client:${{ github.sha }}
+          tags: kyrokrypt/ems-scraper-client:${{ github.sha }}
 
   build-server:
     runs-on: ubuntu-latest
@@ -49,4 +49,4 @@ jobs:
           context: ./server
           push: true
           platforms: linux/amd64
-          tags: kyrokrypt/ems-scraper:${{ github.sha }}
+          tags: kyrokrypt/ems-scraper-server:${{ github.sha }}

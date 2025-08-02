@@ -1,34 +1,62 @@
 import { HistoricalScraper } from './historical-scraper';
 import { ContinuousScraper } from './continuous-scraper';
+import { activityLogger } from './activity-logger';
 
 import { ScraperStats } from "@/types/scraper-types";
 
 export class ScraperService {
-    private historicalScraper: HistoricalScraper;
-    private continuousScraper: ContinuousScraper;
+    private static historicalScraper: HistoricalScraper | null = null;
+    private static continuousScraper: ContinuousScraper | null = null;
 
-    constructor() {
-        this.historicalScraper = new HistoricalScraper();
-        this.continuousScraper = new ContinuousScraper();
+    private static getHistoricalScraper(): HistoricalScraper {
+        if (!ScraperService.historicalScraper) {
+            ScraperService.historicalScraper = new HistoricalScraper();
+        }
+        return ScraperService.historicalScraper;
     }
 
-    async scrapeHistoricalData(): Promise<ScraperStats> {
-        return await this.historicalScraper.scrapeHistoricalData();
+    private static getContinuousScraper(): ContinuousScraper {
+        if (!ScraperService.continuousScraper) {
+            ScraperService.continuousScraper = new ContinuousScraper();
+        }
+        return ScraperService.continuousScraper;
     }
 
-    async startContinuousScraping(): Promise<void> {
-        return await this.continuousScraper.startContinuousScraping();
+    static async scrapeHistoricalData(): Promise<ScraperStats> {
+        return await ScraperService.getHistoricalScraper().scrapeHistoricalData();
     }
 
-    async stopContinuousScraping(): Promise<void> {
-        return await this.continuousScraper.stopContinuousScraping();
+    static async startContinuousScraping(): Promise<void> {
+        activityLogger.log('Starting continuous scraper', 'info');
+        try {
+            await ScraperService.getContinuousScraper().startContinuousScraping();
+            // Only log success if still running (wasn't stopped during startup)
+            if (ScraperService.getContinuousScraper().isScraperRunning()) {
+                activityLogger.log('Continuous scraper started successfully', 'success');
+            }
+        } catch (error) {
+            activityLogger.log(`Failed to start continuous scraper: ${error}`, 'error');
+            throw error;
+        }
     }
 
-    async getContinuousScraperStatus(): Promise<{
+    static async stopContinuousScraping(): Promise<void> {
+        activityLogger.log('Stopping continuous scraper', 'info');
+        try {
+            const result = await ScraperService.getContinuousScraper().stopContinuousScraping();
+            activityLogger.log('Continuous scraper stopped successfully', 'success');
+            return result;
+        } catch (error) {
+            activityLogger.log(`Failed to stop continuous scraper: ${error}`, 'error');
+            throw error;
+        }
+    }
+
+    static async getContinuousScraperStatus(): Promise<{
         isRunning: boolean;
         currentDate?: Date;
         lastUpdate?: Date;
     }> {
-        return await this.continuousScraper.getScraperStatus();
+        return await ScraperService.getContinuousScraper().getScraperStatus();
     }
 }

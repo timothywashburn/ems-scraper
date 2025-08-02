@@ -1,99 +1,112 @@
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+
+interface AuthUser {
+  token: string;
+  is_admin: boolean;
+  comment: string;
+  last_used?: Date | null;
+}
 
 interface AuthContextType {
-    token: string | null;
-    isAuthenticated: boolean;
-    isValidating: boolean;
-    login: (token: string) => Promise<boolean>;
-    logout: () => void;
+  user: AuthUser | null;
+  isLoading: boolean;
+  login: (token: string) => Promise<boolean>;
+  logout: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export function useAuth() {
-    const context = useContext(AuthContext);
-    if (context === undefined) {
-        throw new Error('useAuth must be used within an AuthProvider');
-    }
-    return context;
-}
+export const useAuth = () => {
+  const context = useContext(AuthContext);
+  if (context === undefined) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  return context;
+};
 
 interface AuthProviderProps {
-    children: ReactNode;
+  children: ReactNode;
 }
 
-const TOKEN_STORAGE_KEY = 'ems-scraper-token';
+export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
+  const [user, setUser] = useState<AuthUser | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
-export function AuthProvider({ children }: AuthProviderProps) {
-    const [token, setToken] = useState<string | null>(null);
-    const [isValidating, setIsValidating] = useState(true);
+  const validateToken = async (token: string): Promise<AuthUser | null> => {
+    try {
+      const response = await fetch('/api/validate-token', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ token }),
+      });
 
-    const validateToken = async (tokenToValidate: string): Promise<boolean> => {
-        try {
-            const response = await fetch('/api/validate-token', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ token: tokenToValidate }),
-            });
-
-            if (!response.ok) {
-                return false;
-            }
-
-            const result = await response.json();
-            return result.success && result.data.valid;
-        } catch (error) {
-            console.error('Token validation failed:', error);
-            return false;
-        }
-    };
-
-    const login = async (newToken: string): Promise<boolean> => {
-        setIsValidating(true);
-        const isValid = await validateToken(newToken);
-        
-        if (isValid) {
-            setToken(newToken);
-            localStorage.setItem(TOKEN_STORAGE_KEY, newToken);
-        }
-        
-        setIsValidating(false);
-        return isValid;
-    };
-
-    const logout = () => {
-        setToken(null);
-        localStorage.removeItem(TOKEN_STORAGE_KEY);
-    };
-
-    useEffect(() => {
-        const initializeAuth = async () => {
-            const storedToken = localStorage.getItem(TOKEN_STORAGE_KEY);
-            
-            if (storedToken) {
-                const isValid = await validateToken(storedToken);
-                if (isValid) {
-                    setToken(storedToken);
-                } else {
-                    localStorage.removeItem(TOKEN_STORAGE_KEY);
-                }
-            }
-            
-            setIsValidating(false);
+      const result = await response.json();
+      
+      if (result.success && result.data.valid) {
+        return {
+          token,
+          is_admin: result.data.is_admin,
+          comment: result.data.comment,
+          last_used: result.data.last_used,
         };
+      }
+      
+      return null;
+    } catch (error) {
+      console.error('Token validation failed:', error);
+      return null;
+    }
+  };
 
-        initializeAuth();
-    }, []);
+  const login = async (token: string): Promise<boolean> => {
+    const validatedUser = await validateToken(token);
+    
+    if (validatedUser) {
+      setUser(validatedUser);
+      localStorage.setItem('auth_token', token);
+      return true;
+    }
+    
+    return false;
+  };
 
-    const value = {
-        token,
-        isAuthenticated: !!token,
-        isValidating,
-        login,
-        logout,
+  const logout = () => {
+    setUser(null);
+    localStorage.removeItem('auth_token');
+  };
+
+  useEffect(() => {
+    const initializeAuth = async () => {
+      const storedToken = localStorage.getItem('auth_token');
+      
+      if (storedToken) {
+        const validatedUser = await validateToken(storedToken);
+        
+        if (validatedUser) {
+          setUser(validatedUser);
+        } else {
+          localStorage.removeItem('auth_token');
+        }
+      }
+      
+      setIsLoading(false);
     };
 
-    return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
-}
+    initializeAuth();
+  }, []);
+
+  const value: AuthContextType = {
+    user,
+    isLoading,
+    login,
+    logout,
+  };
+
+  return (
+    <AuthContext.Provider value={value}>
+      {children}
+    </AuthContext.Provider>
+  );
+};

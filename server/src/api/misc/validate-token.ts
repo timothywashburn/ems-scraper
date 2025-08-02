@@ -8,6 +8,8 @@ interface ValidateTokenRequest {
 interface ValidateTokenResponse {
     valid: boolean;
     is_admin?: boolean;
+    comment?: string;
+    last_used?: Date | null;
 }
 
 export const validateTokenEndpoint: ApiEndpoint<ValidateTokenRequest, ValidateTokenResponse> = {
@@ -18,25 +20,27 @@ export const validateTokenEndpoint: ApiEndpoint<ValidateTokenRequest, ValidateTo
         const { token } = req.body;
 
         if (!token) {
-            res.status(400).json({
+            res.json({
                 success: false,
                 error: {
                     message: 'Token is required',
-                    code: ErrorCode.VALIDATION_ERROR,
+                    code: ErrorCode.MISSING_TOKEN
                 },
             });
             return;
         }
 
         const tokenService = TokenService.getInstance();
-        const validToken = await tokenService.validateToken(token);
+        const apiToken = await tokenService.validateToken(token);
 
-        if (validToken) {
+        if (apiToken) {
             res.json({
                 success: true,
                 data: {
                     valid: true,
-                    is_admin: validToken.is_admin,
+                    is_admin: apiToken.is_admin,
+                    comment: apiToken.comment,
+                    last_used: apiToken.last_used,
                 },
             });
         } else {

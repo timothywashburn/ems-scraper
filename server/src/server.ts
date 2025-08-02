@@ -26,13 +26,10 @@ const startServer = async () => {
         // Run scripts for empty tables
         await scriptManager.runAllScripts();
 
-        // Initialize scraper service
-        const scraper = new ScraperService();
-
         // Run scrapers based on config constants
         if (HISTORICAL_SCRAPER_CONFIG.RUN_HISTORICAL_SCRAPER) {
             console.log('🚀 Starting historical scraper...');
-            scraper.scrapeHistoricalData()
+            ScraperService.scrapeHistoricalData()
                 .then(stats => {
                     console.log('✅ Historical scraping completed:', stats);
                 })
@@ -43,7 +40,7 @@ const startServer = async () => {
 
         if (CONTINUOUS_SCRAPER_CONFIG.RUN_CONTINUOUS_SCRAPER) {
             console.log('🔄 Starting continuous scraper...');
-            scraper.startContinuousScraping()
+            ScraperService.startContinuousScraping()
                 .then(() => {
                     console.log('✅ Continuous scraper completed');
                 })

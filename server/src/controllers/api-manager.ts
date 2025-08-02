@@ -10,6 +10,9 @@ import { getWeeklyAvailabilityEndpoint } from '@/api/availability/weekly-availab
 import { getMonthlyAvailabilityEndpoint } from '@/api/availability/monthly-availability';
 import { TokenService } from '@/services/token-service';
 import { validateTokenEndpoint } from "@/api/misc/validate-token";
+import { scraperOverviewEndpoint } from '@/api/scraper/scraper-overview';
+import { scraperControlEndpoint } from '@/api/scraper/scraper-control';
+import { scraperLogsEndpoint } from '@/api/scraper/scraper-logs';
 
 export default class ApiManager {
     private static instance: ApiManager;
@@ -40,6 +43,11 @@ export default class ApiManager {
         this.addEndpoint(getDailyAvailabilityEndpoint);
         this.addEndpoint(getWeeklyAvailabilityEndpoint);
         this.addEndpoint(getMonthlyAvailabilityEndpoint);
+
+        // Scraper endpoints
+        this.addEndpoint(scraperOverviewEndpoint);
+        this.addEndpoint(scraperControlEndpoint);
+        this.addEndpoint(scraperLogsEndpoint);
 
         console.log(`registered api endpoints`);
     }

@@ -9,6 +9,7 @@ import { getDailyAvailabilityEndpoint } from '@/api/availability/daily-availabil
 import { getWeeklyAvailabilityEndpoint } from '@/api/availability/weekly-availability';
 import { getMonthlyAvailabilityEndpoint } from '@/api/availability/monthly-availability';
 import { TokenService } from '@/services/token-service';
+import { validateTokenEndpoint } from "@/api/misc/validate-token";
 
 export default class ApiManager {
     private static instance: ApiManager;
@@ -21,7 +22,9 @@ export default class ApiManager {
     }
 
     private registerEndpoints() {
+        // Misc endpoints
         this.addEndpoint(statusEndpoint);
+        this.addEndpoint(validateTokenEndpoint);
 
         // Monitoring endpoints
         this.addEndpoint(getViolationsEndpoint);

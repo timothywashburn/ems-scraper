@@ -1,4 +1,4 @@
-import express, { Router, Request, Response, NextFunction, RequestHandler } from 'express';
+import express, { NextFunction, Request, RequestHandler, Response, Router } from 'express';
 import { ApiEndpoint, ApiRequest, ApiResponse, AuthType, ErrorCode } from '@/types/api-types';
 import { statusEndpoint } from '@/api/misc/status';
 import { getViolationsEndpoint } from '@/api/monitor/get-violations';
@@ -25,19 +25,19 @@ export default class ApiManager {
 
         // Monitoring endpoints
         this.addEndpoint(getViolationsEndpoint);
-        
+
         // Event endpoints
         this.addEndpoint(getEventsEndpoint);
         this.addEndpoint(getEventByIdEndpoint);
-        
+
         // Group endpoints
         this.addEndpoint(getGroupsEndpoint);
-        
+
         // Availability endpoints
         this.addEndpoint(getDailyAvailabilityEndpoint);
         this.addEndpoint(getWeeklyAvailabilityEndpoint);
         this.addEndpoint(getMonthlyAvailabilityEndpoint);
-        
+
         console.log(`registered api endpoints`);
     }
 

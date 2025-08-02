@@ -1,6 +1,5 @@
 import express from 'express';
 import cors from 'cors';
-import dotenv from 'dotenv';
 import ApiManager from '@/controllers/api-manager';
 import { prisma } from '@/lib/prisma';
 import { ScraperService } from '@/services/scraper-service';
@@ -20,16 +19,16 @@ const startServer = async () => {
         // Test Prisma connection
         await prisma.$connect();
         console.log('Prisma connected successfully');
-        
+
         // Ensure initial API token exists
         await TokenService.getInstance().ensureInitialTokenExists();
-        
+
         // Run scripts for empty tables
         await scriptManager.runAllScripts();
-        
+
         // Initialize scraper service
         const scraper = new ScraperService();
-        
+
         // Run scrapers based on config constants
         if (HISTORICAL_SCRAPER_CONFIG.RUN_HISTORICAL_SCRAPER) {
             console.log('🚀 Starting historical scraper...');
@@ -41,7 +40,7 @@ const startServer = async () => {
                     console.error('❌ Historical scraping failed:', error);
                 });
         }
-        
+
         if (CONTINUOUS_SCRAPER_CONFIG.RUN_CONTINUOUS_SCRAPER) {
             console.log('🔄 Starting continuous scraper...');
             scraper.startContinuousScraping()
@@ -52,9 +51,9 @@ const startServer = async () => {
                     console.error('❌ Continuous scraper failed:', error);
                 });
         }
-        
+
         app.use(ApiManager.getInstance().getRouter());
-        
+
         app.listen(PORT, () => {
             console.log(`EMS Scraper server running on port ${PORT}`);
         });

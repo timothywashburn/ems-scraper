@@ -16,8 +16,4 @@ export const HISTORICAL_SCRAPER_CONFIG = {
     // Request timeout settings (can be overridden per scraper)
     BASE_DELAY_MS: 1000,
     MAX_DELAY_MS: 30000,
-
-    // Database persistence settings (can be overridden per scraper)
-    BATCH_SIZE: 100,
-    CHECKPOINT_INTERVAL: 10,
 } as const;

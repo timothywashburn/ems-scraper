@@ -52,6 +52,7 @@ export interface RawHistoricalEventData extends EventData {
   history_id: number;
   version_number: number;
   archived_at: Date;
+  last_checked: Date;
   change_count: number;
 }
 

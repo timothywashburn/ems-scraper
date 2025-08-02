@@ -106,7 +106,7 @@ export class EventModel {
         const newEvent = EventModel.transformRawEvent(rawEvent);
         const changes: EventChanges['changes'] = [];
 
-        // Compare all fields except metadata and version
+        // Compare all fields except metadata
         const fieldsToCompare: (keyof Omit<raw_events, 'version_number' | 'created_at' | 'updated_at' | 'last_checked' | 'no_longer_found_at'>)[] = [
             'id', 'event_name', 'event_start', 'event_end', 'gmt_start', 'gmt_end',
             'time_booking_start', 'time_booking_end', 'is_all_day_event', 'timezone_abbreviation',
@@ -154,7 +154,7 @@ export class EventModel {
                 event_id: existingEvent.id,
                 version_number: nextVersionNumber,
                 change_count: changes.changeCount,
-                last_checked: existingEvent.last_checked,
+                last_checked: existingEvent.last_checked || new Date(),
                 
                 // Snapshot of all current event data
                 event_name: existingEvent.event_name,

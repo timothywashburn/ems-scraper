@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useUIStore } from '../stores/uiStore';
 import { Search, Calendar, Clock, MapPin, Users, History, ChevronDown, ChevronRight, AlertTriangle, Activity, Eye, Database, Copy, ExternalLink } from 'lucide-react';
+import { useParams } from 'react-router';
 
 interface EventDetails {
   id: string;
@@ -98,6 +99,7 @@ interface FieldDiff {
 
 export const EventExplorerPage: React.FC = () => {
   const { user } = useAuth();
+  const { eventId } = useParams<{ eventId: string }>();
   const [searchTerm, setSearchTerm] = useState('');
   const [eventDetails, setEventDetails] = useState<EventDetails | null>(null);
   const [eventHistory, setEventHistory] = useState<HistoryEntry[]>([]);
@@ -464,6 +466,49 @@ export const EventExplorerPage: React.FC = () => {
     }
   };
 
+  // Auto-search when eventId is provided in URL
+  useEffect(() => {
+    if (eventId && eventId.trim()) {
+      setSearchTerm(eventId);
+      resetEventExplorerState();
+      
+      // Call searchEvent directly with the eventId
+      const autoSearch = async () => {
+        if (!eventId.trim()) return;
+
+        setIsLoading(true);
+        setError(null);
+        setEventDetails(null);
+        setEventHistory([]);
+
+        try {
+          const response = await fetch(`/api/events/${eventId}/details`, {
+            headers: {
+              'Authorization': `Bearer ${user?.token}`,
+            },
+          });
+          
+          const result: EventDetailsResponse = await response.json();
+          
+          if (result.success && result.data) {
+            setEventDetails(result.data.event);
+            // Automatically fetch history
+            await fetchEventHistory(eventId);
+          } else {
+            setError(result.error?.message || 'Event not found');
+          }
+        } catch (error) {
+          setError('Network error');
+          console.error('Failed to fetch event:', error);
+        } finally {
+          setIsLoading(false);
+        }
+      };
+
+      autoSearch();
+    }
+  }, [eventId, user?.token]);
+
   return (
     <div className="p-6 space-y-6">
       <div className="flex items-center justify-between">
@@ -492,7 +537,8 @@ export const EventExplorerPage: React.FC = () => {
           <button
             onClick={handleSearch}
             disabled={isLoading || !searchTerm.trim()}
-            className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
+            className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50
+            disabled:cursor-not-allowed flex items-center space-x-2 cursor-pointer"
           >
             {isLoading ? (
               <>

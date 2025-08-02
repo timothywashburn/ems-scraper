@@ -6,14 +6,27 @@ import { ScraperStatusPage } from '../pages/ScraperStatusPage';
 import { EventUpdatesPage } from '../pages/EventUpdatesPage';
 import { EventExplorerPage } from '../pages/EventExplorerPage';
 import { ApiKeyManagementPage } from '../pages/ApiKeyManagementPage';
+import { Routes, Route, useNavigate, useLocation } from 'react-router';
 
 type DashboardView = 'scraper' | 'events' | 'explorer' | 'api-keys';
 
 
 export const AdminDashboard: React.FC = () => {
   const { user, logout } = useAuth();
-  const [currentView, setCurrentView] = useState<DashboardView>('scraper');
+  const navigate = useNavigate();
+  const location = useLocation();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  
+  // Determine current view from URL
+  const getCurrentView = (): DashboardView => {
+    const path = location.pathname;
+    if (path.startsWith('/explorer')) return 'explorer';
+    if (path.startsWith('/events')) return 'events';
+    if (path.startsWith('/api-keys')) return 'api-keys';
+    return 'scraper';
+  };
+  
+  const currentView = getCurrentView();
   
   // Zustand store
   const {
@@ -54,6 +67,7 @@ export const AdminDashboard: React.FC = () => {
       name: 'Scraper Status',
       icon: Activity,
       description: 'Monitor continuous scraper performance',
+      path: '/',
     },
     {
       id: 'events' as DashboardView,
@@ -61,6 +75,7 @@ export const AdminDashboard: React.FC = () => {
       icon: Calendar,
       description: 'Track changes in EMS events',
       disabled: false,
+      path: '/events',
     },
     {
       id: 'explorer' as DashboardView,
@@ -68,6 +83,7 @@ export const AdminDashboard: React.FC = () => {
       icon: Search,
       description: 'Search and explore event details and history',
       disabled: false,
+      path: '/explorer',
     },
     {
       id: 'api-keys' as DashboardView,
@@ -75,34 +91,10 @@ export const AdminDashboard: React.FC = () => {
       icon: Key,
       description: 'Manage API tokens and access keys',
       disabled: false,
+      path: '/api-keys',
     },
   ];
 
-  const renderContent = () => {
-    switch (currentView) {
-      case 'scraper':
-        return (
-          <ScraperStatusPage
-            scraperOverview={scraperOverview}
-            activities={activities}
-            overviewLoading={overviewLoading}
-            logsLoading={logsLoading}
-            overviewError={overviewError}
-            logsError={logsError}
-            lastRefresh={lastRefresh}
-            onScraperControl={handleScraperControl}
-          />
-        );
-      case 'events':
-        return <EventUpdatesPage />;
-      case 'explorer':
-        return <EventExplorerPage />;
-      case 'api-keys':
-        return <ApiKeyManagementPage />;
-      default:
-        return null;
-    }
-  };
 
   return (
     <div className="flex h-screen bg-gray-900">
@@ -128,7 +120,7 @@ export const AdminDashboard: React.FC = () => {
                 key={item.id}
                 onClick={() => {
                   if (!item.disabled) {
-                    setCurrentView(item.id);
+                    navigate(item.path);
                     setIsSidebarOpen(false);
                   }
                 }}
@@ -189,7 +181,24 @@ export const AdminDashboard: React.FC = () => {
 
         {/* Content */}
         <main className="flex-1 overflow-auto">
-          {renderContent()}
+          <Routes>
+            <Route path="/" element={
+              <ScraperStatusPage
+                scraperOverview={scraperOverview}
+                activities={activities}
+                overviewLoading={overviewLoading}
+                logsLoading={logsLoading}
+                overviewError={overviewError}
+                logsError={logsError}
+                lastRefresh={lastRefresh}
+                onScraperControl={handleScraperControl}
+              />
+            } />
+            <Route path="/events" element={<EventUpdatesPage />} />
+            <Route path="/explorer" element={<EventExplorerPage />} />
+            <Route path="/explorer/:eventId" element={<EventExplorerPage />} />
+            <Route path="/api-keys" element={<ApiKeyManagementPage />} />
+          </Routes>
         </main>
       </div>
 

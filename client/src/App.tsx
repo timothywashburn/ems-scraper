@@ -3,6 +3,7 @@ import { TokenInput } from './components/TokenInput';
 import { AdminDashboard } from './components/AdminDashboard';
 import { UserDashboard } from './components/UserDashboard';
 import { Loader2 } from 'lucide-react';
+import { BrowserRouter } from 'react-router';
 
 function AppContent() {
   const { user, isLoading } = useAuth();
@@ -23,10 +24,18 @@ function AppContent() {
   }
 
   if (user.is_admin) {
-    return <AdminDashboard />;
+    return (
+      <BrowserRouter>
+        <AdminDashboard />
+      </BrowserRouter>
+    );
   }
 
-  return <UserDashboard />;
+  return (
+    <BrowserRouter>
+      <UserDashboard />
+    </BrowserRouter>
+  );
 }
 
 function App() {

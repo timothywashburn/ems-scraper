@@ -48,4 +48,5 @@ export enum ErrorCode {
     NOT_FOUND = 'NOT_FOUND',
     UNAUTHORIZED = 'UNAUTHORIZED',
     FORBIDDEN = 'FORBIDDEN',
+    BAD_REQUEST = 'BAD_REQUEST',
 }

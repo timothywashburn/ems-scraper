@@ -16,6 +16,10 @@ import { validateTokenEndpoint } from "@/api/misc/validate-token";
 import { scraperOverviewEndpoint } from '@/api/scraper/scraper-overview';
 import { scraperControlEndpoint } from '@/api/scraper/scraper-control';
 import { scraperLogsEndpoint } from '@/api/scraper/scraper-logs';
+import { getApiKeysEndpoint } from '@/api/admin/get-api-keys';
+import { createApiKeyEndpoint } from '@/api/admin/create-api-key';
+import { updateApiKeyEndpoint } from '@/api/admin/update-api-key';
+import { deleteApiKeyEndpoint } from '@/api/admin/delete-api-key';
 
 export default class ApiManager {
     private static instance: ApiManager;
@@ -54,6 +58,12 @@ export default class ApiManager {
         this.addEndpoint(scraperOverviewEndpoint);
         this.addEndpoint(scraperControlEndpoint);
         this.addEndpoint(scraperLogsEndpoint);
+
+        // Admin endpoints
+        this.addEndpoint(getApiKeysEndpoint);
+        this.addEndpoint(createApiKeyEndpoint);
+        this.addEndpoint(updateApiKeyEndpoint);
+        this.addEndpoint(deleteApiKeyEndpoint);
 
         console.log(`registered api endpoints`);
     }

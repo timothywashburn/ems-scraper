@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { Activity, Calendar, LogOut, Menu, X, Search } from 'lucide-react';
+import { Activity, Calendar, LogOut, Menu, X, Search, Key } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useScraperStore } from '../stores/scraperStore';
 import { ScraperStatusPage } from '../pages/ScraperStatusPage';
 import { EventUpdatesPage } from '../pages/EventUpdatesPage';
 import { EventExplorerPage } from '../pages/EventExplorerPage';
+import { ApiKeyManagementPage } from '../pages/ApiKeyManagementPage';
 
-type DashboardView = 'scraper' | 'events' | 'explorer';
+type DashboardView = 'scraper' | 'events' | 'explorer' | 'api-keys';
 
 
 export const AdminDashboard: React.FC = () => {
@@ -68,6 +69,13 @@ export const AdminDashboard: React.FC = () => {
       description: 'Search and explore event details and history',
       disabled: false,
     },
+    {
+      id: 'api-keys' as DashboardView,
+      name: 'API Keys',
+      icon: Key,
+      description: 'Manage API tokens and access keys',
+      disabled: false,
+    },
   ];
 
   const renderContent = () => {
@@ -89,6 +97,8 @@ export const AdminDashboard: React.FC = () => {
         return <EventUpdatesPage />;
       case 'explorer':
         return <EventExplorerPage />;
+      case 'api-keys':
+        return <ApiKeyManagementPage />;
       default:
         return null;
     }
@@ -128,7 +138,7 @@ export const AdminDashboard: React.FC = () => {
                     ? 'bg-blue-900/50 text-blue-300'
                     : item.disabled
                     ? 'text-gray-500 cursor-not-allowed'
-                    : 'text-gray-300 hover:bg-gray-700'
+                    : 'text-gray-300 hover:bg-gray-700 cursor-pointer'
                 }`}
                 title={item.disabled ? 'Coming soon' : item.description}
               >
@@ -150,7 +160,7 @@ export const AdminDashboard: React.FC = () => {
             </div>
             <button
               onClick={logout}
-              className="p-2 rounded-md text-gray-400 hover:text-gray-300"
+              className="p-2 rounded-md text-gray-400 hover:text-gray-300 cursor-pointer"
               title="Logout"
             >
               <LogOut className="w-5 h-5" />

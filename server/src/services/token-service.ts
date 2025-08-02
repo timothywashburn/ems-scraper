@@ -57,6 +57,63 @@ export class TokenService {
         return apiToken;
     }
 
+    async getAllTokens(): Promise<ApiToken[]> {
+        return prisma.api_tokens.findMany({
+            orderBy: {
+                id: 'asc',
+            },
+        });
+    }
+
+    async updateToken(token: string, updates: { is_admin?: boolean; comment?: string }): Promise<ApiToken | null> {
+        try {
+            const existingToken = await prisma.api_tokens.findFirst({
+                where: { token },
+            });
+
+            if (!existingToken) {
+                return null;
+            }
+
+            const updateData: any = {};
+            if (updates.is_admin !== undefined) {
+                updateData.is_admin = updates.is_admin;
+            }
+            if (updates.comment !== undefined) {
+                updateData.comment = updates.comment;
+            }
+
+            return prisma.api_tokens.update({
+                where: { id: existingToken.id },
+                data: updateData,
+            });
+        } catch (error) {
+            console.error('Error updating token:', error);
+            return null;
+        }
+    }
+
+    async deleteToken(token: string): Promise<boolean> {
+        try {
+            const existingToken = await prisma.api_tokens.findFirst({
+                where: { token },
+            });
+
+            if (!existingToken) {
+                return false;
+            }
+
+            await prisma.api_tokens.delete({
+                where: { id: existingToken.id },
+            });
+
+            return true;
+        } catch (error) {
+            console.error('Error deleting token:', error);
+            return false;
+        }
+    }
+
     async ensureInitialTokenExists(): Promise<void> {
         const tokenCount = await prisma.api_tokens.count();
 

@@ -1,7 +1,10 @@
 image:
   registry: kyrokrypt/ems-scraper
   pullPolicy: Always
-  tag: latest
+  client:
+    tag: latest
+  server:
+    tag: latest
 
 client:
   image:

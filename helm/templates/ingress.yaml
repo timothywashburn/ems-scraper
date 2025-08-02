@@ -1,7 +1,7 @@
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: clubhive-ingress
+  name: ems-scraper-ingress
   namespace: {{ .Values.namespace }}
   annotations: {}
 spec:
@@ -14,6 +14,13 @@ spec:
         pathType: Prefix
         backend:
           service:
-            name: ems-scraper-service
+            name: server-service
             port:
               number: 3100
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: client-service
+            port:
+              number: 80

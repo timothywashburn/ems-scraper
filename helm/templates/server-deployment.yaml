@@ -1,23 +1,23 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: ems-scraper
+  name: server
   namespace: {{ .Values.namespace }}
   labels:
-    app: ems-scraper
+    app: server
 spec:
   replicas: 1
   revisionHistoryLimit: 3
   selector:
     matchLabels:
-      app: ems-scraper
+      app: server
   template:
     metadata:
       labels:
-        app: ems-scraper
+        app: server
     spec:
       containers:
-      - name: ems-scraper
+      - name: server
         image: {{ .Values.image.registry }}:{{ .Values.image.tag }}
         imagePullPolicy: {{ .Values.image.pullPolicy }}
         ports:

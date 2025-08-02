@@ -1,12 +1,25 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: ems-scraper-service
+  name: server-service
   namespace: {{ .Values.namespace }}
 spec:
   selector:
-    app: ems-scraper
+    app: server
   ports:
   - port: 3100
     targetPort: 3100
+  type: ClusterIP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: client-service
+  namespace: {{ .Values.namespace }}
+spec:
+  selector:
+    app: client
+  ports:
+  - port: 80
+    targetPort: 80
   type: ClusterIP

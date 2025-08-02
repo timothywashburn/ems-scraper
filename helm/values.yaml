@@ -3,6 +3,12 @@ image:
   pullPolicy: Always
   tag: latest
 
+client:
+  image:
+    registry: kyrokrypt/ems-scraper
+    pullPolicy: Always
+    tag: latest
+
 ingress:
   host: "ems.timothyw.dev"
   ingressClassName: traefik

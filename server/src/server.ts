@@ -38,17 +38,6 @@ const startServer = async () => {
                 });
         }
 
-        if (CONTINUOUS_SCRAPER_CONFIG.RUN_CONTINUOUS_SCRAPER) {
-            console.log('🔄 Starting continuous scraper...');
-            ScraperService.startContinuousScraping()
-                .then(() => {
-                    console.log('✅ Continuous scraper completed');
-                })
-                .catch(error => {
-                    console.error('❌ Continuous scraper failed:', error);
-                });
-        }
-
         app.use(ApiManager.getInstance().getRouter());
 
         app.listen(PORT, () => {

@@ -220,3 +220,72 @@ export interface RawConstantViolation {
   actual_value: string;
   violation_time: Date;
 }
+
+// Field constants for single source of truth across client/server
+export const EVENT_COMPARABLE_FIELDS = [
+  'id', 'event_name', 'event_start', 'event_end', 'gmt_start', 'gmt_end',
+  'time_booking_start', 'time_booking_end', 'is_all_day_event', 'timezone_abbreviation',
+  'building', 'building_id', 'room', 'room_id', 'room_code', 'room_type', 'room_type_id',
+  'location', 'location_link', 'group_name', 'reservation_id', 'reservation_summary_url',
+  'status_id', 'status_type_id', 'web_user_is_owner'
+] as const satisfies readonly (keyof EventData)[];
+
+export const EVENT_METADATA_FIELDS = [
+  'version_number', 'created_at', 'updated_at', 'last_checked', 'no_longer_found_at', 'archived_at', 'change_count'
+] as const;
+
+export const EVENT_DISPLAY_FIELDS = [
+  ...EVENT_COMPARABLE_FIELDS,
+  ...EVENT_METADATA_FIELDS
+] as const;
+
+export type EventComparableField = typeof EVENT_COMPARABLE_FIELDS[number];
+export type EventMetadataField = typeof EVENT_METADATA_FIELDS[number];
+export type EventDisplayField = typeof EVENT_DISPLAY_FIELDS[number];
+
+// Field metadata for UI display purposes
+export const EVENT_FIELD_METADATA: Record<EventDisplayField, { label: string; group: string }> = {
+  // Core fields
+  'id': { label: 'Event ID', group: 'Core' },
+  'event_name': { label: 'Event Name', group: 'Core' },
+  
+  // Time fields
+  'event_start': { label: 'Event Start', group: 'Time' },
+  'event_end': { label: 'Event End', group: 'Time' },
+  'gmt_start': { label: 'GMT Start', group: 'Time' },
+  'gmt_end': { label: 'GMT End', group: 'Time' },
+  'time_booking_start': { label: 'Booking Start', group: 'Time' },
+  'time_booking_end': { label: 'Booking End', group: 'Time' },
+  'is_all_day_event': { label: 'All Day Event', group: 'Time' },
+  'timezone_abbreviation': { label: 'Timezone', group: 'Time' },
+  
+  // Location fields
+  'building': { label: 'Building', group: 'Location' },
+  'building_id': { label: 'Building ID', group: 'Location' },
+  'room': { label: 'Room', group: 'Location' },
+  'room_id': { label: 'Room ID', group: 'Location' },
+  'room_code': { label: 'Room Code', group: 'Location' },
+  'room_type': { label: 'Room Type', group: 'Location' },
+  'room_type_id': { label: 'Room Type ID', group: 'Location' },
+  'location': { label: 'Location', group: 'Location' },
+  'location_link': { label: 'Location Link', group: 'Location' },
+  
+  // Organization fields
+  'group_name': { label: 'Group Name', group: 'Organization' },
+  'reservation_id': { label: 'Reservation ID', group: 'Organization' },
+  'reservation_summary_url': { label: 'Reservation URL', group: 'Organization' },
+  
+  // Status fields
+  'status_id': { label: 'Status ID', group: 'Status' },
+  'status_type_id': { label: 'Status Type ID', group: 'Status' },
+  'web_user_is_owner': { label: 'Web User Is Owner', group: 'Status' },
+  
+  // Metadata fields
+  'version_number': { label: 'Version Number', group: 'Metadata' },
+  'created_at': { label: 'Created At', group: 'Metadata' },
+  'updated_at': { label: 'Updated At', group: 'Metadata' },
+  'last_checked': { label: 'Last Checked', group: 'Metadata' },
+  'no_longer_found_at': { label: 'No Longer Found At', group: 'Metadata' },
+  'archived_at': { label: 'Archived At', group: 'Metadata' },
+  'change_count': { label: 'Change Count', group: 'Metadata' }
+} as const;

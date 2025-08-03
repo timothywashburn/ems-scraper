@@ -3,6 +3,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useUIStore } from '../stores/uiStore';
 import { Search, Calendar, Clock, MapPin, Users, History, ChevronDown, ChevronRight, AlertTriangle, Activity, Eye, Database, Copy, ExternalLink } from 'lucide-react';
 import { useParams } from 'react-router';
+import { EVENT_COMPARABLE_FIELDS, EVENT_DISPLAY_FIELDS, EVENT_FIELD_METADATA } from '@timothyw/ems-scraper-types';
 
 interface EventDetails {
   id: string;
@@ -185,14 +186,8 @@ export const EventExplorerPage: React.FC = () => {
 
   const calculateDiff = (oldEntry: HistoryEntry | EventDetails, newEntry: HistoryEntry | EventDetails): FieldDiff[] => {
     const diffs: FieldDiff[] = [];
-    // Match the server-side field comparison from EventModel.detectChanges
-    const fieldsToCompare = [
-      'event_name', 'event_start', 'event_end', 'gmt_start', 'gmt_end',
-      'time_booking_start', 'time_booking_end', 'is_all_day_event', 'timezone_abbreviation',
-      'building', 'building_id', 'room', 'room_id', 'room_code', 'room_type', 'room_type_id',
-      'location', 'location_link', 'group_name', 'reservation_id', 'reservation_summary_url',
-      'status_id', 'status_type_id', 'web_user_is_owner'
-    ];
+    // Use shared field list to match server-side field comparison from EventModel.detectChanges
+    const fieldsToCompare = EVENT_COMPARABLE_FIELDS;
 
     for (const field of fieldsToCompare) {
       const oldValue = (oldEntry as any)[field];
@@ -369,64 +364,14 @@ export const EventExplorerPage: React.FC = () => {
   const renderRawDetails = (data: EventDetails | HistoryEntry) => {
     const baseId = 'created_at' in data ? `current-${data.id}` : `history-${data.version_number}`;
     
-    const fields = [
-      // Core event info
-      { key: 'id', label: 'Event ID', group: 'Core' },
-      { key: 'event_name', label: 'Event Name', group: 'Core' },
-      
-      // Time fields
-      { key: 'event_start', label: 'Event Start', group: 'Time' },
-      { key: 'event_end', label: 'Event End', group: 'Time' },
-      { key: 'gmt_start', label: 'GMT Start', group: 'Time' },
-      { key: 'gmt_end', label: 'GMT End', group: 'Time' },
-      { key: 'time_booking_start', label: 'Booking Start', group: 'Time' },
-      { key: 'time_booking_end', label: 'Booking End', group: 'Time' },
-      { key: 'is_all_day_event', label: 'All Day Event', group: 'Time' },
-      { key: 'timezone_abbreviation', label: 'Timezone', group: 'Time' },
-      
-      // Location fields
-      { key: 'building', label: 'Building', group: 'Location' },
-      { key: 'building_id', label: 'Building ID', group: 'Location' },
-      { key: 'room', label: 'Room', group: 'Location' },
-      { key: 'room_id', label: 'Room ID', group: 'Location' },
-      { key: 'room_code', label: 'Room Code', group: 'Location' },
-      { key: 'room_type', label: 'Room Type', group: 'Location' },
-      { key: 'room_type_id', label: 'Room Type ID', group: 'Location' },
-      { key: 'location', label: 'Location', group: 'Location' },
-      { key: 'location_link', label: 'Location Link', group: 'Location' },
-      
-      // Group and reservation
-      { key: 'group_name', label: 'Group Name', group: 'Organization' },
-      { key: 'reservation_id', label: 'Reservation ID', group: 'Organization' },
-      { key: 'reservation_summary_url', label: 'Reservation URL', group: 'Organization' },
-      
-      // Status fields
-      { key: 'status_id', label: 'Status ID', group: 'Status' },
-      { key: 'status_type_id', label: 'Status Type ID', group: 'Status' },
-      { key: 'web_user_is_owner', label: 'Web User Is Owner', group: 'Status' },
-    ];
-
-    // Add metadata fields
-    fields.unshift({ key: 'version_number', label: 'Version Number', group: 'Metadata' });
-    
-    // Add metadata fields for current event
-    if ('created_at' in data) {
-      fields.push(
-        { key: 'created_at', label: 'Created At', group: 'Metadata' },
-        { key: 'updated_at', label: 'Updated At', group: 'Metadata' },
-        { key: 'last_checked', label: 'Last Checked', group: 'Metadata' },
-        { key: 'no_longer_found_at', label: 'No Longer Found At', group: 'Metadata' }
-      );
-    }
-
-    // Add history metadata for history entries
-    if ('archived_at' in data) {
-      fields.push(
-        { key: 'last_checked', label: 'Last Checked', group: 'Metadata' },
-        { key: 'archived_at', label: 'Archived At', group: 'Metadata' },
-        { key: 'change_count', label: 'Change Count', group: 'Metadata' }
-      );
-    }
+    // Build fields dynamically from shared constants and metadata for consistency
+    const fields = EVENT_DISPLAY_FIELDS
+      .filter(field => (data as any)[field] !== undefined)
+      .map(field => ({
+        key: field,
+        label: EVENT_FIELD_METADATA[field].label,
+        group: EVENT_FIELD_METADATA[field].group
+      }));
 
     const groupedFields = fields.reduce((groups, field) => {
       if (!groups[field.group]) groups[field.group] = [];
@@ -783,17 +728,7 @@ export const EventExplorerPage: React.FC = () => {
                               <ChevronRight className="w-3 h-3" />
                             )}
                             <Database className="w-3 h-3" />
-                            <span>Raw Details ({(() => {
-                              const historyFields = [
-                                'id', 'event_name', 'event_start', 'event_end', 'gmt_start', 'gmt_end',
-                                'time_booking_start', 'time_booking_end', 'is_all_day_event', 'timezone_abbreviation',
-                                'building', 'building_id', 'room', 'room_id', 'room_code', 'room_type', 'room_type_id',
-                                'location', 'location_link', 'group_name', 'reservation_id', 'reservation_summary_url',
-                                'status_id', 'status_type_id', 'web_user_is_owner', 'version_number', 'last_checked',
-                                'archived_at', 'change_count'
-                              ];
-                              return historyFields.length;
-                            })()} fields)</span>
+                            <span>Raw Details ({EVENT_DISPLAY_FIELDS.length} fields)</span>
                           </button>
                           
                           {expandedRawVersions.has(historyEntry.version_number) && (

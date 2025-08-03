@@ -1,5 +1,5 @@
 import { prisma } from '@/lib/prisma';
-import { EventChanges, UcsdApiEventData, EventId, IdConverters } from '@timothyw/ems-scraper-types';
+import { EventChanges, UcsdApiEventData, EventId, IdConverters, EVENT_COMPARABLE_FIELDS } from '@timothyw/ems-scraper-types';
 import { raw_events, raw_events_history } from '@prisma/client';
 
 // Expected constant field values for monitoring
@@ -106,14 +106,8 @@ export class EventModel {
         const newEvent = EventModel.transformRawEvent(rawEvent);
         const changes: EventChanges['changes'] = [];
 
-        // Compare all fields except metadata
-        const fieldsToCompare: (keyof Omit<raw_events, 'version_number' | 'created_at' | 'updated_at' | 'last_checked' | 'no_longer_found_at'>)[] = [
-            'id', 'event_name', 'event_start', 'event_end', 'gmt_start', 'gmt_end',
-            'time_booking_start', 'time_booking_end', 'is_all_day_event', 'timezone_abbreviation',
-            'building', 'building_id', 'room', 'room_id', 'room_code', 'room_type', 'room_type_id',
-            'location', 'location_link', 'group_name', 'reservation_id', 'reservation_summary_url',
-            'status_id', 'status_type_id', 'web_user_is_owner'
-        ];
+        // Compare all fields except metadata - using shared constant for consistency
+        const fieldsToCompare = EVENT_COMPARABLE_FIELDS;
 
         for (const field of fieldsToCompare) {
             const oldValue = existingEvent[field];

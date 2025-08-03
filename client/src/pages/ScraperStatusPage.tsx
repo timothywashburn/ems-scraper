@@ -1,47 +1,44 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { ScraperStatusCard } from '../components/scraper/ScraperStatusCard';
 import { ScraperMetrics } from '../components/scraper/ScraperStatistics.tsx';
 import { ScraperActivityLog } from '../components/scraper/ScraperActivityLog';
+import { useScraperStore } from '../stores/scraperStore';
+import { useAuth } from '../contexts/AuthContext';
 
-interface ScraperOverview {
-  isRunning: boolean;
-  currentDate?: string;
-  lastUpdate?: string;
-  totalEvents: number;
-  eventsToday: number;
-  eventsThisWeek: number;
-  eventsThisMonth: number;
-  lastEventUpdate: string | null;
-}
 
-interface ActivityLogEntry {
-  id: string;
-  timestamp: string;
-  message: string;
-  type: 'info' | 'success' | 'error';
-}
+export const ScraperStatusPage: React.FC = () => {
+  const { user } = useAuth();
+  const {
+    overview: scraperOverview,
+    activities,
+    overviewLoading,
+    logsLoading,
+    overviewError,
+    logsError,
+    lastRefresh,
+    controlScraper,
+    startPolling,
+    stopPolling
+  } = useScraperStore();
 
-interface ScraperStatusPageProps {
-  scraperOverview: ScraperOverview | null;
-  activities: ActivityLogEntry[];
-  overviewLoading: boolean;
-  logsLoading: boolean;
-  overviewError: string | null;
-  logsError: string | null;
-  lastRefresh: Date;
-  onScraperControl: (action: 'start' | 'stop') => Promise<void>;
-}
+  const handleScraperControl = async (action: 'start' | 'stop') => {
+    if (user?.token) {
+      await controlScraper(user.token, action);
+    }
+  };
 
-export const ScraperStatusPage: React.FC<ScraperStatusPageProps> = ({
-  scraperOverview,
-  activities,
-  overviewLoading,
-  logsLoading,
-  overviewError,
-  logsError,
-  lastRefresh,
-  onScraperControl
-}) => {
+  // Start/stop polling based on user authentication
+  useEffect(() => {
+    if (user?.token) {
+      startPolling(user.token);
+    } else {
+      stopPolling();
+    }
+
+    return () => {
+      stopPolling();
+    };
+  }, [user?.token, startPolling, stopPolling]);
   return (
     <div className="p-6 space-y-4">
       <div className="flex justify-between items-center">
@@ -58,7 +55,7 @@ export const ScraperStatusPage: React.FC<ScraperStatusPageProps> = ({
               status={scraperOverview}
               isLoading={overviewLoading}
               error={overviewError}
-              onStartStop={onScraperControl}
+              onStartStop={handleScraperControl}
             />
           </div>
           

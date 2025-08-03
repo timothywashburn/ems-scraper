@@ -1,12 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Activity, Calendar, LogOut, Menu, X, Search, Key } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
-import { useScraperStore } from '../stores/scraperStore';
 import { ScraperStatusPage } from '../pages/ScraperStatusPage';
 import { EventUpdatesPage } from '../pages/EventUpdatesPage';
 import { EventExplorerPage } from '../pages/EventExplorerPage';
 import { ApiKeyManagementPage } from '../pages/ApiKeyManagementPage';
-import { Routes, Route, useNavigate, useLocation } from 'react-router';
+import { Routes, Route, Navigate, useNavigate, useLocation } from 'react-router';
 
 type DashboardView = 'scraper' | 'events' | 'explorer' | 'api-keys';
 
@@ -23,43 +22,11 @@ export const AdminDashboard: React.FC = () => {
     if (path.startsWith('/explorer')) return 'explorer';
     if (path.startsWith('/events')) return 'events';
     if (path.startsWith('/api-keys')) return 'api-keys';
+    if (path.startsWith('/status')) return 'scraper';
     return 'scraper';
   };
   
   const currentView = getCurrentView();
-  
-  // Zustand store
-  const {
-    overview: scraperOverview,
-    activities,
-    overviewLoading,
-    logsLoading,
-    overviewError,
-    logsError,
-    lastRefresh,
-    controlScraper,
-    startPolling,
-    stopPolling
-  } = useScraperStore();
-
-  const handleScraperControl = async (action: 'start' | 'stop') => {
-    if (user?.token) {
-      await controlScraper(user.token, action);
-    }
-  };
-
-  // Start/stop polling based on view and user authentication
-  useEffect(() => {
-    if (user?.token && currentView === 'scraper') {
-      startPolling(user.token);
-    } else {
-      stopPolling();
-    }
-
-    return () => {
-      stopPolling();
-    };
-  }, [user?.token, currentView, startPolling, stopPolling]);
 
   const navigation = [
     {
@@ -67,7 +34,7 @@ export const AdminDashboard: React.FC = () => {
       name: 'Scraper Status',
       icon: Activity,
       description: 'Monitor continuous scraper performance',
-      path: '/',
+      path: '/status',
     },
     {
       id: 'events' as DashboardView,
@@ -182,18 +149,8 @@ export const AdminDashboard: React.FC = () => {
         {/* Content */}
         <main className="flex-1 overflow-auto">
           <Routes>
-            <Route path="/" element={
-              <ScraperStatusPage
-                scraperOverview={scraperOverview}
-                activities={activities}
-                overviewLoading={overviewLoading}
-                logsLoading={logsLoading}
-                overviewError={overviewError}
-                logsError={logsError}
-                lastRefresh={lastRefresh}
-                onScraperControl={handleScraperControl}
-              />
-            } />
+            <Route path="/" element={<Navigate to="/status" replace />} />
+            <Route path="/status" element={<ScraperStatusPage />} />
             <Route path="/events" element={<EventUpdatesPage />} />
             <Route path="/explorer" element={<EventExplorerPage />} />
             <Route path="/explorer/:eventId" element={<EventExplorerPage />} />

@@ -45,6 +45,7 @@ export interface RawEventData extends EventData {
   updated_at: Date | null;
   last_checked: Date | null;
   no_longer_found_at: Date | null;
+  status_name?: string;
 }
 
 // Historical event data (archived versions)

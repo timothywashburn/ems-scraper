@@ -36,6 +36,7 @@ interface EventDetails {
   created_at: string;
   updated_at: string;
   last_checked: string;
+  status_name?: string;
 }
 
 interface HistoryEntry {
@@ -582,9 +583,16 @@ export const EventExplorerPage: React.FC = () => {
                   {eventDetails.group_name}
                 </p>
               </div>
+
+              <div>
+                <label className="text-sm font-medium text-gray-400">Event Status</label>
+                <p className="text-white">
+                  {eventDetails.status_name || `Status ID ${eventDetails.status_id}`}
+                </p>
+              </div>
               
               <div>
-                <label className="text-sm font-medium text-gray-400">Status</label>
+                <label className="text-sm font-medium text-gray-400">Availability</label>
                 <p className="text-white">
                   {eventDetails.no_longer_found_at ? (
                     <span className="text-orange-400 flex items-center">
@@ -592,7 +600,7 @@ export const EventExplorerPage: React.FC = () => {
                       No longer found ({formatDateTime(eventDetails.no_longer_found_at)})
                     </span>
                   ) : (
-                    <span className="text-green-400">Active</span>
+                    <span className="text-green-400">Currently on EMS</span>
                   )}
                 </p>
               </div>

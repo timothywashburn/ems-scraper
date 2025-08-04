@@ -2,6 +2,7 @@ import { prisma } from '@/lib/prisma';
 import { populateRoomsScript } from '@/scripts/populate-rooms';
 import { populateBuildingsScript } from '@/scripts/populate-buildings';
 import { populateRoomTypesScript } from '@/scripts/populate-room-types';
+import { populateStatusesScript } from "@/scripts/populate-statuses";
 
 export interface ScriptConfig {
     name: string;
@@ -20,6 +21,7 @@ export class ScriptManager {
         this.addScript(populateBuildingsScript);
         this.addScript(populateRoomTypesScript);
         this.addScript(populateRoomsScript);
+        this.addScript(populateStatusesScript);
         console.log(`Registered ${this.scripts.size} scripts`);
     }
 

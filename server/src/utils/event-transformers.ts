@@ -1,10 +1,10 @@
 import { IdConverters, RawEventData, RawHistoricalEventData } from '@timothyw/ems-scraper-types';
-import { raw_events, raw_events_history } from '@prisma/client';
+import { raw_events, raw_events_history, rel_statuses } from '@prisma/client';
 
 /**
  * Transform database raw_events to RawEventData with branded IDs
  */
-export function transformRawEventToTyped(event: raw_events): RawEventData {
+export function transformRawEventToTyped(event: raw_events & { statusRel?: rel_statuses | null }): RawEventData {
     return {
         id: IdConverters.toEventId(event.id),
         version_number: event.version_number,
@@ -35,7 +35,8 @@ export function transformRawEventToTyped(event: raw_events): RawEventData {
         reservation_summary_url: event.reservation_summary_url,
         status_id: IdConverters.toStatusId(event.status_id),
         status_type_id: IdConverters.toStatusTypeId(event.status_type_id),
-        web_user_is_owner: event.web_user_is_owner
+        web_user_is_owner: event.web_user_is_owner,
+        status_name: event.statusRel?.status_name
     };
 }
 

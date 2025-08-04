@@ -24,7 +24,10 @@ export const getEventByIdEndpoint: ApiEndpoint<undefined, GetEventByIdResponse> 
             }
 
             const rawEvent = await prisma.raw_events.findUnique({
-                where: { id: eventId }
+                where: { id: eventId },
+                include: {
+                    statusRel: true
+                }
             });
 
             if (!rawEvent) {

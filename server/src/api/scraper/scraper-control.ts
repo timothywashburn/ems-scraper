@@ -33,7 +33,7 @@ export const scraperControlEndpoint: ApiEndpoint<ScraperControlRequest, ScraperC
 
             if (action === 'start') {
                 await ScraperService.startContinuousScraping();
-                
+
                 res.json({
                     success: true,
                     data: {
@@ -45,7 +45,7 @@ export const scraperControlEndpoint: ApiEndpoint<ScraperControlRequest, ScraperC
                 });
             } else if (action === 'stop') {
                 await ScraperService.stopContinuousScraping();
-                
+
                 res.json({
                     success: true,
                     data: {

@@ -41,7 +41,7 @@ export class ScraperStateModel {
 
     async setScraperEnabled(scraperType: string, enabled: boolean): Promise<void> {
         const existing = await this.getScraperState(scraperType);
-        
+
         if (existing) {
             await prisma.scraper_state.update({
                 where: { scraper_type: scraperType },

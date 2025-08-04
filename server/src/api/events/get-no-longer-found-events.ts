@@ -10,7 +10,7 @@ export const getNoLongerFoundEventsEndpoint: ApiEndpoint<undefined, GetNoLongerF
     handler: async (req, res) => {
         try {
             const limit = parseInt(req.query.limit as string) || 100;
-            
+
             if (limit > 500) {
                 res.status(400).json({
                     success: false,
@@ -37,7 +37,7 @@ export const getNoLongerFoundEventsEndpoint: ApiEndpoint<undefined, GetNoLongerF
             // Transform to properly typed format
             const typedEvents = transformRawEventsToTyped(rawEvents);
             const serializedEvents = typedEvents.map(event => Serializer.serialize(event));
-            
+
             res.json({
                 success: true,
                 data: {

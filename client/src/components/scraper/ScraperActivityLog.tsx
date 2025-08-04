@@ -1,5 +1,5 @@
 import React from 'react';
-import { ScrollText, Info, CheckCircle, AlertTriangle, Loader2 } from 'lucide-react';
+import { AlertTriangle, CheckCircle, Info, Loader2, ScrollText } from 'lucide-react';
 
 interface ActivityLogEntry {
     timestamp: string;
@@ -46,7 +46,7 @@ export const ScraperActivityLog: React.FC<ScraperActivityLogProps> = ({
         const date = new Date(timestamp);
         const now = new Date();
         const diff = now.getTime() - date.getTime();
-        
+
         if (diff < 60000) {
             const seconds = Math.floor(diff / 1000);
             return `${seconds}s ago`;
@@ -97,7 +97,7 @@ export const ScraperActivityLog: React.FC<ScraperActivityLogProps> = ({
                 <ScrollText className="w-5 h-5 text-yellow-400 mr-2" />
                 <h3 className="text-lg font-semibold text-white">Activity Log</h3>
             </div>
-            
+
             {activities.length === 0 ? (
                 <div className="text-center text-gray-400 py-8">
                     No recent activity
@@ -105,7 +105,8 @@ export const ScraperActivityLog: React.FC<ScraperActivityLogProps> = ({
             ) : (
                 <div className="space-y-3 max-h-140 overflow-y-auto">
                     {activities.map((activity, index) => (
-                        <div key={`${index}-${activity.timestamp}`} className="flex items-start space-x-3 p-3 rounded-md bg-gray-700/50">
+                        <div key={`${index}-${activity.timestamp}`}
+                             className="flex items-start space-x-3 p-3 rounded-md bg-gray-700/50">
                             <div className="flex-shrink-0 mt-0.5">
                                 {getIcon(activity.type)}
                             </div>

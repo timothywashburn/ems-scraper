@@ -1,5 +1,5 @@
 import { EventModel } from '@/models/event-model';
-import { UcsdApiEventData, UCSDApiResponse, EventsRequest, RetryConfig } from '@timothyw/ems-scraper-types';
+import { EventsRequest, RetryConfig, UcsdApiEventData, UCSDApiResponse } from '@timothyw/ems-scraper-types';
 
 // Scraper client will receive config from concrete implementations
 
@@ -193,7 +193,11 @@ export abstract class ScraperClient {
             (error: Error) => error.message.includes('401') || error.message.includes('403'));
     }
 
-    async scrapeDay(date: Date): Promise<{ events: UcsdApiEventData[]; violations: string[]; requestStartTime: number }> {
+    async scrapeDay(date: Date): Promise<{
+        events: UcsdApiEventData[];
+        violations: string[];
+        requestStartTime: number
+    }> {
         // Ensure we have a valid CSRF token
         if (this.isCSRFTokenExpired()) {
             await this.getCSRFToken();

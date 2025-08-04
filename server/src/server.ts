@@ -4,7 +4,6 @@ import ApiManager from '@/controllers/api-manager';
 import { prisma } from '@/lib/prisma';
 import { ScraperService } from '@/services/scraper-service';
 import { HISTORICAL_SCRAPER_CONFIG } from '@/config/historical-scraper-config';
-import { CONTINUOUS_SCRAPER_CONFIG } from '@/config/continuous-scraper-config';
 import { TokenService } from '@/services/token-service';
 import { scriptManager } from '@/controllers/script-manager';
 

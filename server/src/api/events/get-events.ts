@@ -1,5 +1,5 @@
 import { ApiEndpoint, AuthType } from '@/types/api-types';
-import { GetEventsResponse, IdConverters, Serializer } from '@timothyw/ems-scraper-types';
+import { GetEventsResponse, Serializer } from '@timothyw/ems-scraper-types';
 import { prisma } from '@/lib/prisma';
 import { transformRawEventsToTyped } from '@/utils/event-transformers';
 

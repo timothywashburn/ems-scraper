@@ -69,12 +69,12 @@ export class ContinuousScraper extends ScraperClient {
                 updated: number;
                 newEventIds: number[];
             } = { inserted: 0, updated: 0, newEventIds: [] };
-            
+
             if (eventCount > 0) {
                 processResults = await this.processEvents(result.events);
 
                 console.log(`✓ Processed ${eventCount} events (${processResults.inserted} new, ${processResults.updated} updated)`);
-                
+
                 if (processResults.newEventIds.length > 0) {
                     console.log(`➕ New events: [${processResults.newEventIds.join(', ')}]`);
                 }
@@ -87,7 +87,7 @@ export class ContinuousScraper extends ScraperClient {
 
             // Handle events that are no longer found
             const noLongerFoundIds = Array.from(previousEventIds).filter(id => !currentEventIds.has(id));
-            
+
             // Check each current event to see if it was previously marked as "no longer found"
             // regardless of what date it was previously scheduled for
             const foundAgainIds = [];
@@ -116,7 +116,7 @@ export class ContinuousScraper extends ScraperClient {
             // Log successful scrape to activity logger
             const noLongerFoundCount = actuallyMarkedCount;
             const foundAgainCount = foundAgainIds.length;
-            
+
             let logMessage = `Scraped ${dateStr}: ${eventCount} events`;
             if (eventCount > 0 || noLongerFoundCount > 0 || foundAgainCount > 0) {
                 const parts = [];
@@ -124,12 +124,12 @@ export class ContinuousScraper extends ScraperClient {
                 if (processResults.updated > 0) parts.push(`${processResults.updated} updated`);
                 if (foundAgainCount > 0) parts.push(`${foundAgainCount} found again`);
                 if (noLongerFoundCount > 0) parts.push(`${noLongerFoundCount} not found`);
-                
+
                 if (parts.length > 0) {
                     logMessage += ` (${parts.join(', ')})`;
                 }
             }
-            
+
             activityLogger.log(logMessage, 'info');
 
         } catch (error) {

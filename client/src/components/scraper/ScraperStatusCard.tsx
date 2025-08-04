@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { Play, Square, Clock, Calendar, Loader2, AlertTriangle, Activity } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { Activity, AlertTriangle, Loader2, Play, Square } from 'lucide-react';
 
 interface ScraperStatus {
     isRunning: boolean;
@@ -25,7 +25,7 @@ export const ScraperStatusCard: React.FC<ScraperStatusCardProps> = ({
     // Clear pending action when the status changes to match the intended state
     useEffect(() => {
         if (pendingAction && status) {
-            if ((pendingAction === 'start' && status.isRunning) || 
+            if ((pendingAction === 'start' && status.isRunning) ||
                 (pendingAction === 'stop' && !status.isRunning)) {
                 setPendingAction(null);
             }
@@ -91,7 +91,7 @@ export const ScraperStatusCard: React.FC<ScraperStatusCardProps> = ({
                         {status?.currentDate || 'N/A'}
                     </span>
                 </div>
-                
+
                 <div className="flex items-center justify-between text-gray-300">
                     <span className="text-sm">Last Update:</span>
                     <span className="text-xs text-gray-400">

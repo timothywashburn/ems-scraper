@@ -2,8 +2,7 @@ import { ScraperClient } from './scraper-client';
 import { HISTORICAL_SCRAPER_CONFIG } from '@/config/historical-scraper-config';
 import { getHistoricalEndDate } from '@/utils/date-helpers';
 
-import { ScraperStats } from "@timothyw/ems-scraper-types";
-import { IdConverters } from "@timothyw/ems-scraper-types";
+import { IdConverters, ScraperStats } from "@timothyw/ems-scraper-types";
 import { EventModel } from "@/models/event-model";
 
 export class HistoricalScraper extends ScraperClient {

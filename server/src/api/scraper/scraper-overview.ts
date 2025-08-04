@@ -7,7 +7,7 @@ interface ScraperOverviewResponse {
     isRunning: boolean;
     currentDate?: string;
     lastUpdate?: string;
-    
+
     // Metrics
     totalEvents: number;
     eventsToday: number;

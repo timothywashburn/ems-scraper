@@ -1,6 +1,6 @@
 import { ApiEndpoint, AuthType } from '@/types/api-types';
 import { EventModel } from '@/models/event-model';
-import { GetRecentChangesResponse, IdConverters, Serializer } from '@timothyw/ems-scraper-types';
+import { GetRecentChangesResponse, Serializer } from '@timothyw/ems-scraper-types';
 import { transformHistoryEventsToTyped } from '@/utils/event-transformers';
 
 export const getRecentChangesEndpoint: ApiEndpoint<undefined, GetRecentChangesResponse> = {
@@ -10,7 +10,7 @@ export const getRecentChangesEndpoint: ApiEndpoint<undefined, GetRecentChangesRe
     handler: async (req, res) => {
         try {
             const limit = parseInt(req.query.limit as string) || 50;
-            
+
             if (limit > 500) {
                 res.status(400).json({
                     success: false,
@@ -23,11 +23,11 @@ export const getRecentChangesEndpoint: ApiEndpoint<undefined, GetRecentChangesRe
             }
 
             const changes = await EventModel.getRecentChanges(limit);
-            
+
             // Transform changes to properly typed format
             const typedChanges = transformHistoryEventsToTyped(changes);
             const serializedChanges = typedChanges.map(c => Serializer.serialize(c));
-            
+
             res.json({
                 success: true,
                 data: {

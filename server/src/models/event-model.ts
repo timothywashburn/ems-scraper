@@ -1,5 +1,11 @@
 import { prisma } from '@/lib/prisma';
-import { EventChanges, UcsdApiEventData, EventId, IdConverters, EVENT_COMPARABLE_FIELDS } from '@timothyw/ems-scraper-types';
+import {
+    EVENT_COMPARABLE_FIELDS,
+    EventChanges,
+    EventId,
+    IdConverters,
+    UcsdApiEventData
+} from '@timothyw/ems-scraper-types';
 import { raw_events, raw_events_history } from '@prisma/client';
 
 // Expected constant field values for monitoring
@@ -149,7 +155,7 @@ export class EventModel {
                 version_number: nextVersionNumber,
                 change_count: changes.changeCount,
                 last_checked: existingEvent.last_checked || new Date(),
-                
+
                 // Snapshot of all current event data
                 event_name: existingEvent.event_name,
                 event_start: existingEvent.event_start,
@@ -213,7 +219,10 @@ export class EventModel {
     }
 
     // Upsert event (insert or update)
-    static async upsertEvent(rawEvent: UcsdApiEventData): Promise<{ action: 'inserted' | 'updated'; changes?: EventChanges }> {
+    static async upsertEvent(rawEvent: UcsdApiEventData): Promise<{
+        action: 'inserted' | 'updated';
+        changes?: EventChanges
+    }> {
         const existingEvent = await EventModel.getEventById(IdConverters.toEventId(rawEvent.Id));
 
         if (!existingEvent) {

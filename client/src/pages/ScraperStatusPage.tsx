@@ -7,75 +7,75 @@ import { useAuth } from '../contexts/AuthContext';
 
 
 export const ScraperStatusPage: React.FC = () => {
-  const { user } = useAuth();
-  const {
-    overview: scraperOverview,
-    activities,
-    overviewLoading,
-    logsLoading,
-    overviewError,
-    logsError,
-    lastRefresh,
-    controlScraper,
-    startPolling,
-    stopPolling
-  } = useScraperStore();
+    const { user } = useAuth();
+    const {
+        overview: scraperOverview,
+        activities,
+        overviewLoading,
+        logsLoading,
+        overviewError,
+        logsError,
+        lastRefresh,
+        controlScraper,
+        startPolling,
+        stopPolling
+    } = useScraperStore();
 
-  const handleScraperControl = async (action: 'start' | 'stop') => {
-    if (user?.token) {
-      await controlScraper(user.token, action);
-    }
-  };
-
-  // Start/stop polling based on user authentication
-  useEffect(() => {
-    if (user?.token) {
-      startPolling(user.token);
-    } else {
-      stopPolling();
-    }
-
-    return () => {
-      stopPolling();
+    const handleScraperControl = async (action: 'start' | 'stop') => {
+        if (user?.token) {
+            await controlScraper(user.token, action);
+        }
     };
-  }, [user?.token, startPolling, stopPolling]);
-  return (
-    <div className="p-6 space-y-4">
-      <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold text-white">Scraper Status</h2>
-        <div className="text-xs text-gray-400">
-          Last refresh: {lastRefresh.toLocaleTimeString()} • Auto-refresh every 2s
+
+    // Start/stop polling based on user authentication
+    useEffect(() => {
+        if (user?.token) {
+            startPolling(user.token);
+        } else {
+            stopPolling();
+        }
+
+        return () => {
+            stopPolling();
+        };
+    }, [user?.token, startPolling, stopPolling]);
+    return (
+        <div className="p-6 space-y-4">
+            <div className="flex justify-between items-center">
+                <h2 className="text-2xl font-bold text-white">Scraper Status</h2>
+                <div className="text-xs text-gray-400">
+                    Last refresh: {lastRefresh.toLocaleTimeString()} • Auto-refresh every 2s
+                </div>
+            </div>
+
+            <div className="space-y-4">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                    <div>
+                        <ScraperStatusCard
+                            status={scraperOverview}
+                            isLoading={overviewLoading}
+                            error={overviewError}
+                            onStartStop={handleScraperControl}
+                        />
+                    </div>
+
+                    <div>
+                        <ScraperMetrics
+                            metrics={scraperOverview}
+                            isLoading={overviewLoading}
+                            error={overviewError}
+                        />
+                    </div>
+                </div>
+
+                <div>
+                    <ScraperActivityLog
+                        activities={activities}
+                        isLoading={logsLoading}
+                        error={logsError}
+                    />
+                </div>
+            </div>
         </div>
-      </div>
-      
-      <div className="space-y-4">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          <div>
-            <ScraperStatusCard
-              status={scraperOverview}
-              isLoading={overviewLoading}
-              error={overviewError}
-              onStartStop={handleScraperControl}
-            />
-          </div>
-          
-          <div>
-            <ScraperMetrics
-              metrics={scraperOverview}
-              isLoading={overviewLoading}
-              error={overviewError}
-            />
-          </div>
-        </div>
-        
-        <div>
-          <ScraperActivityLog
-            activities={activities}
-            isLoading={logsLoading}
-            error={logsError}
-          />
-        </div>
-      </div>
-    </div>
-  );
+    );
 };

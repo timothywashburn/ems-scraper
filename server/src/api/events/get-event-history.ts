@@ -1,6 +1,6 @@
 import { ApiEndpoint, AuthType } from '@/types/api-types';
 import { EventModel } from '@/models/event-model';
-import { IdConverters, GetEventHistoryResponse, Serializer } from '@timothyw/ems-scraper-types';
+import { GetEventHistoryResponse, IdConverters, Serializer } from '@timothyw/ems-scraper-types';
 import { transformHistoryEventsToTyped } from '@/utils/event-transformers';
 
 export const getEventHistoryEndpoint: ApiEndpoint<undefined, GetEventHistoryResponse> = {
@@ -10,7 +10,7 @@ export const getEventHistoryEndpoint: ApiEndpoint<undefined, GetEventHistoryResp
     handler: async (req, res) => {
         try {
             const eventId = parseInt(req.params.eventId);
-            
+
             if (isNaN(eventId)) {
                 res.status(400).json({
                     success: false,
@@ -23,11 +23,11 @@ export const getEventHistoryEndpoint: ApiEndpoint<undefined, GetEventHistoryResp
             }
 
             const history = await EventModel.getEventHistory(IdConverters.toEventId(eventId));
-            
+
             // Transform history to properly typed format
             const typedHistory = transformHistoryEventsToTyped(history);
             const serializedHistory = typedHistory.map(h => Serializer.serialize(h));
-            
+
             res.json({
                 success: true,
                 data: {

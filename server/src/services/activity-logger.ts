@@ -10,7 +10,8 @@ export class ActivityLogger {
     private activities: ActivityEntry[] = [];
     private maxEntries = 100; // Keep last 100 entries
 
-    private constructor() {}
+    private constructor() {
+    }
 
     static getInstance(): ActivityLogger {
         if (!ActivityLogger.instance) {
@@ -32,7 +33,7 @@ export class ActivityLogger {
         };
 
         this.activities.unshift(entry); // Add to beginning
-        
+
         // Keep only the most recent entries
         if (this.activities.length > this.maxEntries) {
             this.activities = this.activities.slice(0, this.maxEntries);

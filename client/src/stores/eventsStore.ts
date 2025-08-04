@@ -104,7 +104,7 @@ export const useEventsStore = create<EventsState>((set, get) => ({
   // Async actions
   fetchNoLongerFoundEvents: async (token: string) => {
     try {
-      const response = await fetch('/api/events/missing?limit=100', {
+      const response = await fetch('/api/events/missing?limit=20', {
         headers: {
           'Authorization': `Bearer ${token}`,
         },

@@ -253,14 +253,14 @@ export const ApiKeyManagementPage: React.FC = () => {
                             <div className="flex gap-2 pt-4">
                                 <button
                                     type="submit"
-                                    className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                                    className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors cursor-pointer"
                                 >
                                     Create Key
                                 </button>
                                 <button
                                     type="button"
                                     onClick={() => setShowCreateForm(false)}
-                                    className="flex-1 px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
+                                    className="flex-1 px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors cursor-pointer"
                                 >
                                     Cancel
                                 </button>

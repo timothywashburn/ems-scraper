@@ -7,6 +7,7 @@ import { getEventByIdEndpoint } from '@/api/events/get-event-by-id';
 import { getEventHistoryEndpoint } from '@/api/events/get-event-history';
 import { getRecentChangesEndpoint } from '@/api/events/get-recent-changes';
 import { getNoLongerFoundEventsEndpoint } from '@/api/events/get-no-longer-found-events';
+import { getNewEventsEndpoint } from '@/api/events/get-new-events';
 import { getGroupsEndpoint } from '@/api/groups/get-groups';
 import { getDailyAvailabilityEndpoint } from '@/api/availability/daily-availability';
 import { getWeeklyAvailabilityEndpoint } from '@/api/availability/weekly-availability';
@@ -45,6 +46,7 @@ export default class ApiManager {
         this.addEndpoint(getEventHistoryEndpoint);
         this.addEndpoint(getRecentChangesEndpoint);
         this.addEndpoint(getNoLongerFoundEventsEndpoint);
+        this.addEndpoint(getNewEventsEndpoint);
 
         // Group endpoints
         this.addEndpoint(getGroupsEndpoint);

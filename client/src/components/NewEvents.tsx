@@ -1,28 +1,17 @@
 import React from 'react';
-import { AlertTriangle, Calendar } from 'lucide-react';
+import { Plus, Calendar } from 'lucide-react';
 import { useEventsStore } from '../stores/eventsStore';
 import { EventCard } from './EventCard';
-
-interface NoLongerFoundEvent {
-    id: string;
-    event_name: string;
-    event_start: string;
-    event_end: string;
-    building: string;
-    room: string;
-    group_name: string;
-    no_longer_found_at: string;
-}
 
 interface Props {
     onEventClick?: (eventId: string) => void;
 }
 
-export const NoLongerFoundEvents: React.FC<Props> = ({ onEventClick }) => {
+export const NewEvents: React.FC<Props> = ({ onEventClick }) => {
     const {
-        noLongerFoundEvents,
-        isLoading,
-        error,
+        newEvents,
+        newEventsLoading,
+        newEventsError,
     } = useEventsStore();
 
     const formatTimeAgo = (dateString: string) => {
@@ -47,31 +36,31 @@ export const NoLongerFoundEvents: React.FC<Props> = ({ onEventClick }) => {
     return (
         <div className="bg-gray-800 rounded-lg shadow border border-gray-700 p-6 flex flex-col">
             <h3 className="text-lg font-semibold text-white mb-4 flex items-center">
-                <AlertTriangle className="w-5 h-5 mr-2 text-orange-400" />
-                Events No Longer Found ({noLongerFoundEvents.length})
+                <Plus className="w-5 h-5 mr-2 text-green-400" />
+                New Events ({newEvents.length})
             </h3>
 
-            {isLoading ? (
+            {newEventsLoading ? (
                 <div className="flex-1 flex items-center justify-center">
-                    <div className="text-gray-400">Loading...</div>
+                    <div className="text-gray-400">Loading new events...</div>
                 </div>
-            ) : error ? (
+            ) : newEventsError ? (
                 <div className="flex-1 flex items-center justify-center">
-                    <div className="text-red-400">{error}</div>
+                    <div className="text-red-400">{newEventsError}</div>
                 </div>
-            ) : noLongerFoundEvents.length === 0 ? (
+            ) : newEvents.length === 0 ? (
                 <div className="flex-1 flex items-center justify-center">
                     <div className="text-center text-gray-400">
                         <Calendar className="w-12 h-12 mx-auto mb-4 text-gray-500" />
-                        <p>No events marked as no longer found</p>
+                        <p>No new events</p>
                         <p className="text-sm mt-2">
-                            Events that disappear from the source will appear here.
+                            Recently added events will appear here.
                         </p>
                     </div>
                 </div>
             ) : (
                 <div className="flex-1 overflow-y-auto space-y-3">
-                    {noLongerFoundEvents.map((event) => (
+                    {newEvents.map((event) => (
                         <EventCard
                             key={event.id}
                             eventId={event.id}
@@ -81,8 +70,9 @@ export const NoLongerFoundEvents: React.FC<Props> = ({ onEventClick }) => {
                             building={event.building}
                             room={event.room}
                             groupName={event.group_name}
-                            statusLine={formatTimeAgo(event.no_longer_found_at)}
-                            statusColor="orange"
+                            statusLine={formatTimeAgo(event.created_at)}
+                            statusColor="purple"
+                            bottomLine="New event"
                             onClick={onEventClick}
                         />
                     ))}

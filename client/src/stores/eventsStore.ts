@@ -44,19 +44,33 @@ interface RecentChange {
     web_user_is_owner: boolean;
 }
 
+interface NewEvent {
+    id: string;
+    event_name: string;
+    event_start: string;
+    event_end: string;
+    building: string;
+    room: string;
+    group_name: string;
+    created_at: string;
+}
+
 interface EventsState {
     // Data
     noLongerFoundEvents: NoLongerFoundEvent[];
     recentChanges: RecentChange[];
+    newEvents: NewEvent[];
     lastRefresh: Date;
 
     // Loading states
     isLoading: boolean;
     recentChangesLoading: boolean;
+    newEventsLoading: boolean;
 
     // Error states
     error: string | null;
     recentChangesError: string | null;
+    newEventsError: string | null;
 
     // Polling control
     isPolling: boolean;
@@ -65,15 +79,19 @@ interface EventsState {
     // Actions
     setNoLongerFoundEvents: (events: NoLongerFoundEvent[]) => void;
     setRecentChanges: (changes: RecentChange[]) => void;
+    setNewEvents: (events: NewEvent[]) => void;
     setLoading: (loading: boolean) => void;
     setRecentChangesLoading: (loading: boolean) => void;
+    setNewEventsLoading: (loading: boolean) => void;
     setError: (error: string | null) => void;
     setRecentChangesError: (error: string | null) => void;
+    setNewEventsError: (error: string | null) => void;
     setLastRefresh: (date: Date) => void;
 
     // Async actions
     fetchNoLongerFoundEvents: (token: string) => Promise<void>;
     fetchRecentChanges: (token: string) => Promise<void>;
+    fetchNewEvents: (token: string) => Promise<void>;
 
     // Polling control
     startPolling: (token: string) => void;
@@ -84,21 +102,27 @@ export const useEventsStore = create<EventsState>((set, get) => ({
     // Initial state
     noLongerFoundEvents: [],
     recentChanges: [],
+    newEvents: [],
     lastRefresh: new Date(),
     isLoading: true,
     recentChangesLoading: true,
+    newEventsLoading: true,
     error: null,
     recentChangesError: null,
+    newEventsError: null,
     isPolling: false,
     pollingInterval: null,
 
     // Basic setters
     setNoLongerFoundEvents: (noLongerFoundEvents) => set({ noLongerFoundEvents }),
     setRecentChanges: (recentChanges) => set({ recentChanges }),
+    setNewEvents: (newEvents) => set({ newEvents }),
     setLoading: (isLoading) => set({ isLoading }),
     setRecentChangesLoading: (recentChangesLoading) => set({ recentChangesLoading }),
+    setNewEventsLoading: (newEventsLoading) => set({ newEventsLoading }),
     setError: (error) => set({ error }),
     setRecentChangesError: (recentChangesError) => set({ recentChangesError }),
+    setNewEventsError: (newEventsError) => set({ newEventsError }),
     setLastRefresh: (lastRefresh) => set({ lastRefresh }),
 
     // Async actions
@@ -148,6 +172,29 @@ export const useEventsStore = create<EventsState>((set, get) => ({
         }
     },
 
+    fetchNewEvents: async (token: string) => {
+        try {
+            const response = await fetch('/api/events/new?limit=20', {
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                },
+            });
+            const result = await response.json();
+
+            if (result.success && result.data) {
+                get().setNewEvents(result.data.events);
+                get().setNewEventsError(null);
+            } else {
+                get().setNewEventsError(result.error?.message || 'Failed to fetch new events');
+            }
+        } catch (error) {
+            get().setNewEventsError('Network error');
+            console.error('Failed to fetch new events:', error);
+        } finally {
+            get().setNewEventsLoading(false);
+        }
+    },
+
     // Polling control
     startPolling: (token: string) => {
         if (get().isPolling) return;
@@ -156,7 +203,8 @@ export const useEventsStore = create<EventsState>((set, get) => ({
         const fetchData = async () => {
             await Promise.all([
                 get().fetchNoLongerFoundEvents(token),
-                get().fetchRecentChanges(token)
+                get().fetchRecentChanges(token),
+                get().fetchNewEvents(token)
             ]);
             get().setLastRefresh(new Date());
         };

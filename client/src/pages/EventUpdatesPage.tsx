@@ -2,7 +2,8 @@ import React, { useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useEventsStore } from '../stores/eventsStore';
 import { EventHistoryOverview } from '../components/EventHistoryOverview';
-import { NoLongerFoundEvents } from '../components/NoLongerFoundEvents';
+import { MissingEvents } from '../components/MissingEvents';
+import { NewEvents } from '../components/NewEvents';
 import { useNavigate } from 'react-router';
 
 export const EventUpdatesPage: React.FC = () => {
@@ -37,12 +38,15 @@ export const EventUpdatesPage: React.FC = () => {
                 </div>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 h-[calc(100vh-200px)]">
-                {/* Left Panel - Event History Overview */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-[calc(100vh-200px)]">
+                {/* Left Panel - New Events */}
+                <NewEvents onEventClick={handleEventClick} />
+
+                {/* Middle Panel - Recent Changes */}
                 <EventHistoryOverview onEventClick={handleEventClick} />
 
                 {/* Right Panel - No Longer Found Events */}
-                <NoLongerFoundEvents onEventClick={handleEventClick} />
+                <MissingEvents onEventClick={handleEventClick} />
             </div>
         </div>
     );

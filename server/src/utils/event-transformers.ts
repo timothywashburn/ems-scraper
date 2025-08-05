@@ -35,8 +35,7 @@ export function transformRawEventToTyped(event: raw_events & { statusRel?: rel_s
         reservation_summary_url: event.reservation_summary_url,
         status_id: IdConverters.toStatusId(event.status_id),
         status_type_id: IdConverters.toStatusTypeId(event.status_type_id),
-        web_user_is_owner: event.web_user_is_owner,
-        status_name: event.statusRel?.status_name
+        web_user_is_owner: event.web_user_is_owner
     };
 }
 

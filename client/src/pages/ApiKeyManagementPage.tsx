@@ -195,21 +195,25 @@ export const ApiKeyManagementPage: React.FC = () => {
     }
 
     return (
-        <div className="p-6 max-w-6xl mx-auto">
-            <div className="flex items-center justify-between mb-6">
-                <div className="flex items-center gap-3">
-                    <Key className="w-8 h-8 text-blue-500" />
-                    <h1 className="text-2xl font-bold text-white">API Key Management</h1>
+        <div className="min-h-screen bg-gray-900 text-gray-100">
+            <div className="max-w-6xl mx-auto px-4 py-8">
+                <div className="flex items-center justify-between mb-8">
+                    <div className="flex items-center space-x-3">
+                        <Key className="w-8 h-8 text-blue-400" />
+                        <div>
+                            <h1 className="text-2xl font-bold text-white">API Key Management</h1>
+                            <p className="text-gray-400">Manage API tokens and access keys</p>
+                        </div>
+                    </div>
+                    
+                    <button
+                        onClick={() => setShowCreateForm(true)}
+                        className="flex items-center space-x-2 px-6 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg transition-colors cursor-pointer"
+                    >
+                        <Plus className="w-4 h-4" />
+                        <span>Create API Key</span>
+                    </button>
                 </div>
-                <button
-                    onClick={() => setShowCreateForm(true)}
-                    className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700
-          transition-colors cursor-pointer"
-                >
-                    <Plus className="w-4 h-4" />
-                    Create API Key
-                </button>
-            </div>
 
             {error && (
                 <div
@@ -393,6 +397,7 @@ export const ApiKeyManagementPage: React.FC = () => {
                         <p className="text-sm">Create your first API key to get started</p>
                     </div>
                 )}
+            </div>
             </div>
         </div>
     );

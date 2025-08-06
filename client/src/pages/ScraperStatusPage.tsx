@@ -1,4 +1,5 @@
 import React, { useEffect } from 'react';
+import { Activity } from 'lucide-react';
 import { ScraperStatusCard } from '../components/scraper/ScraperStatusCard';
 import { ScraperMetrics } from '../components/scraper/ScraperStatistics.tsx';
 import { ScraperActivityLog } from '../components/scraper/ScraperActivityLog';
@@ -40,13 +41,21 @@ export const ScraperStatusPage: React.FC = () => {
         };
     }, [user?.token, startPolling, stopPolling]);
     return (
-        <div className="p-6 space-y-4">
-            <div className="flex justify-between items-center">
-                <h2 className="text-2xl font-bold text-white">Scraper Status</h2>
-                <div className="text-xs text-gray-400">
-                    Last refresh: {lastRefresh.toLocaleTimeString()} • Auto-refresh every 2s
+        <div className="min-h-screen bg-gray-900 text-gray-100">
+            <div className="max-w-6xl mx-auto px-4 py-8">
+                <div className="flex items-center justify-between mb-8">
+                    <div className="flex items-center space-x-3">
+                        <Activity className="w-8 h-8 text-blue-400" />
+                        <div>
+                            <h1 className="text-2xl font-bold text-white">Scraper Status</h1>
+                            <p className="text-gray-400">Monitor continuous scraper performance</p>
+                        </div>
+                    </div>
+                    
+                    <div className="text-sm text-gray-400">
+                        Last refresh: {lastRefresh.toLocaleTimeString()} • Auto-refresh every 2s
+                    </div>
                 </div>
-            </div>
 
             <div className="space-y-4">
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
@@ -75,6 +84,7 @@ export const ScraperStatusPage: React.FC = () => {
                         error={logsError}
                     />
                 </div>
+            </div>
             </div>
         </div>
     );

@@ -1,4 +1,5 @@
 import React, { useEffect } from 'react';
+import { Calendar } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useEventsStore } from '../stores/eventsStore';
 import { EventHistoryOverview } from '../components/EventHistoryOverview';
@@ -30,13 +31,21 @@ export const EventUpdatesPage: React.FC = () => {
     };
 
     return (
-        <div className="p-6 space-y-4">
-            <div className="flex justify-between items-center">
-                <h2 className="text-2xl font-bold text-white">Event Updates</h2>
-                <div className="text-xs text-gray-400">
-                    Last refresh: {lastRefresh.toLocaleTimeString()} • Auto-refresh every 5s
+        <div className="min-h-screen bg-gray-900 text-gray-100">
+            <div className="mx-auto px-4 py-8">
+                <div className="flex items-center justify-between mb-8">
+                    <div className="flex items-center space-x-3">
+                        <Calendar className="w-8 h-8 text-blue-400" />
+                        <div>
+                            <h1 className="text-2xl font-bold text-white">Event Updates</h1>
+                            <p className="text-gray-400">Track changes in EMS events</p>
+                        </div>
+                    </div>
+                    
+                    <div className="text-sm text-gray-400">
+                        Last refresh: {lastRefresh.toLocaleTimeString()} • Auto-refresh every 5s
+                    </div>
                 </div>
-            </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-[calc(100vh-200px)]">
                 {/* Left Panel - New Events */}
@@ -47,6 +56,7 @@ export const EventUpdatesPage: React.FC = () => {
 
                 {/* Right Panel - No Longer Found Events */}
                 <MissingEvents onEventClick={handleEventClick} />
+            </div>
             </div>
         </div>
     );

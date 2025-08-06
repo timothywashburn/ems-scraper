@@ -21,6 +21,7 @@ import { getApiKeysEndpoint } from '@/api/admin/get-api-keys';
 import { createApiKeyEndpoint } from '@/api/admin/create-api-key';
 import { updateApiKeyEndpoint } from '@/api/admin/update-api-key';
 import { deleteApiKeyEndpoint } from '@/api/admin/delete-api-key';
+import { getScriptsStatus, runScript, runAllScripts } from '@/api/admin/scripts-control';
 
 export default class ApiManager {
     private static instance: ApiManager;
@@ -66,6 +67,9 @@ export default class ApiManager {
         this.addEndpoint(createApiKeyEndpoint);
         this.addEndpoint(updateApiKeyEndpoint);
         this.addEndpoint(deleteApiKeyEndpoint);
+        this.addEndpoint(getScriptsStatus);
+        this.addEndpoint(runScript);
+        this.addEndpoint(runAllScripts);
 
         console.log(`registered api endpoints`);
     }

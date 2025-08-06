@@ -56,3 +56,32 @@ export interface GetNoLongerFoundEventsResponse {
   count: number;
   events: Serialized<TypedEvent>[];
 }
+
+export interface ScriptInfo {
+  name: string;
+  tableName: string;
+  recordCount: number;
+  status: 'empty' | 'populated';
+}
+
+export interface GetScriptsStatusResponse {
+  scripts: ScriptInfo[];
+}
+
+export interface RunScriptRequest {
+  scriptName: string;
+}
+
+export interface RunScriptResponse {
+  success: boolean;
+  scriptName: string;
+  message: string;
+  recordsProcessed?: number;
+}
+
+export interface RunAllScriptsResponse {
+  success: boolean;
+  results: RunScriptResponse[];
+  totalScripts: number;
+  successfulScripts: number;
+}

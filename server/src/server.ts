@@ -22,8 +22,8 @@ const startServer = async () => {
         // Ensure initial API token exists
         await TokenService.getInstance().ensureInitialTokenExists();
 
-        // Run scripts for empty tables
-        await scriptManager.runAllScripts();
+        // Run scripts for empty tables (can be disabled for manual control)
+        // await scriptManager.runAllScriptsIfEmpty();
 
         // Run scrapers based on config constants
         if (HISTORICAL_SCRAPER_CONFIG.RUN_HISTORICAL_SCRAPER) {

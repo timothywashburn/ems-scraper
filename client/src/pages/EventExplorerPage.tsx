@@ -508,13 +508,19 @@ export const EventExplorerPage: React.FC = () => {
     }, [eventId, user?.token]);
 
     return (
-        <div className="p-6 space-y-6">
-            <div className="flex items-center justify-between">
-                <h2 className="text-2xl font-bold text-white">Event Explorer</h2>
-                <div className="text-xs text-gray-400">
-                    Search by Event ID to view details and history
+        <div className="min-h-screen bg-gray-900 text-gray-100">
+            <div className="max-w-6xl mx-auto px-4 py-8">
+                <div className="flex items-center justify-between mb-8">
+                    <div className="flex items-center space-x-3">
+                        <Search className="w-8 h-8 text-blue-400" />
+                        <div>
+                            <h1 className="text-2xl font-bold text-white">Event Explorer</h1>
+                            <p className="text-gray-400">Search and explore event details and history</p>
+                        </div>
+                    </div>
                 </div>
-            </div>
+
+                <div className="space-y-6">
 
             {/* Search Section */}
             <div className="bg-gray-800 rounded-lg border border-gray-700 p-6">
@@ -778,6 +784,8 @@ export const EventExplorerPage: React.FC = () => {
                     )}
                 </div>
             )}
+                </div>
+            </div>
         </div>
     );
 };

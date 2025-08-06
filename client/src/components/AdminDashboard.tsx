@@ -1,13 +1,14 @@
 import React, { useState } from 'react';
-import { Activity, Calendar, Key, LogOut, Menu, Search, X } from 'lucide-react';
+import { Activity, Calendar, Key, LogOut, Menu, Search, X, Database } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { ScraperStatusPage } from '../pages/ScraperStatusPage';
 import { EventUpdatesPage } from '../pages/EventUpdatesPage';
 import { EventExplorerPage } from '../pages/EventExplorerPage';
 import { ApiKeyManagementPage } from '../pages/ApiKeyManagementPage';
+import { ScriptsManagementPage } from '../pages/ScriptsManagementPage';
 import { Navigate, Route, Routes, useLocation, useNavigate } from 'react-router';
 
-type DashboardView = 'scraper' | 'events' | 'explorer' | 'api-keys';
+type DashboardView = 'scraper' | 'events' | 'explorer' | 'api-keys' | 'scripts';
 
 
 export const AdminDashboard: React.FC = () => {
@@ -22,6 +23,7 @@ export const AdminDashboard: React.FC = () => {
         if (path.startsWith('/explorer')) return 'explorer';
         if (path.startsWith('/events')) return 'events';
         if (path.startsWith('/api-keys')) return 'api-keys';
+        if (path.startsWith('/scripts')) return 'scripts';
         if (path.startsWith('/status')) return 'scraper';
         return 'scraper';
     };
@@ -59,6 +61,14 @@ export const AdminDashboard: React.FC = () => {
             description: 'Manage API tokens and access keys',
             disabled: false,
             path: '/api-keys',
+        },
+        {
+            id: 'scripts' as DashboardView,
+            name: 'Scripts',
+            icon: Database,
+            description: 'Control population scripts and monitor table status',
+            disabled: false,
+            path: '/scripts',
         },
     ];
 
@@ -156,6 +166,7 @@ export const AdminDashboard: React.FC = () => {
                         <Route path="/explorer" element={<EventExplorerPage />} />
                         <Route path="/explorer/:eventId" element={<EventExplorerPage />} />
                         <Route path="/api-keys" element={<ApiKeyManagementPage />} />
+                        <Route path="/scripts" element={<ScriptsManagementPage />} />
                     </Routes>
                 </main>
             </div>

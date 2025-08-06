@@ -6,6 +6,7 @@ import { ScraperService } from '@/services/scraper-service';
 import { HISTORICAL_SCRAPER_CONFIG } from '@/config/historical-scraper-config';
 import { TokenService } from '@/services/token-service';
 import { scriptManager } from '@/controllers/script-manager';
+import { ScraperStateModel } from '@/models/scraper-state-model';
 
 const app = express();
 const PORT = 3100;
@@ -15,17 +16,11 @@ app.use(express.json());
 
 const startServer = async () => {
     try {
-        // Test Prisma connection
         await prisma.$connect();
         console.log('Prisma connected successfully');
 
-        // Ensure initial API token exists
         await TokenService.getInstance().ensureInitialTokenExists();
 
-        // Run scripts for empty tables (can be disabled for manual control)
-        // await scriptManager.runAllScriptsIfEmpty();
-
-        // Run scrapers based on config constants
         if (HISTORICAL_SCRAPER_CONFIG.RUN_HISTORICAL_SCRAPER) {
             console.log('🚀 Starting historical scraper...');
             ScraperService.scrapeHistoricalData()
@@ -35,6 +30,20 @@ const startServer = async () => {
                 .catch(error => {
                     console.error('❌ Historical scraping failed:', error);
                 });
+        }
+
+        const isContinuousScraperEnabled = await ScraperStateModel.isScraperEnabled('continuous');
+        if (isContinuousScraperEnabled) {
+            console.log('🚀 Auto-starting continuous scraper (was previously enabled)...');
+            ScraperService.startContinuousScraping()
+                .then(() => {
+                    console.log('✅ Continuous scraper auto-started successfully');
+                })
+                .catch(error => {
+                    console.error('❌ Failed to auto-start continuous scraper:', error);
+                });
+        } else {
+            console.log('ℹ️ Continuous scraper not auto-started');
         }
 
         app.use(ApiManager.getInstance().getRouter());
@@ -48,4 +57,4 @@ const startServer = async () => {
     }
 };
 
-startServer();
+startServer().then();

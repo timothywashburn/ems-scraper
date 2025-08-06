@@ -7,14 +7,12 @@ import { EventModel } from "@/models/event-model";
 import { activityLogger } from './activity-logger';
 
 export class ContinuousScraper extends ScraperClient {
-    private scraperStateModel: ScraperStateModel;
     private readonly SCRAPER_TYPE = 'continuous';
     private isRunning = false;
     private shouldStop = false;
 
     constructor() {
         super(CONTINUOUS_SCRAPER_CONFIG);
-        this.scraperStateModel = new ScraperStateModel();
     }
 
     private async processEvents(events: UcsdApiEventData[]): Promise<{
@@ -111,7 +109,7 @@ export class ContinuousScraper extends ScraperClient {
                 console.log(`✅ Cleared no-longer-found status for ${foundAgainIds.length} events: [${foundAgainIds.join(', ')}]`);
             }
 
-            await this.scraperStateModel.updateScraperState(this.SCRAPER_TYPE, date);
+            await ScraperStateModel.updateScraperState(this.SCRAPER_TYPE, date);
 
             // Log successful scrape to activity logger
             const noLongerFoundCount = actuallyMarkedCount;
@@ -155,7 +153,7 @@ export class ContinuousScraper extends ScraperClient {
     }
 
     private async getStoredScrapingDate(): Promise<Date> {
-        const state = await this.scraperStateModel.getScraperState(this.SCRAPER_TYPE);
+        const state = await ScraperStateModel.getScraperState(this.SCRAPER_TYPE);
 
         if (state) {
             console.log(`Resuming from last position: ${state.current_date.toISOString().split('T')[0]}`);
@@ -164,7 +162,7 @@ export class ContinuousScraper extends ScraperClient {
             // First time running, start from today
             const today = new Date();
             console.log(`First run detected, starting from today: ${today.toISOString().split('T')[0]}`);
-            await this.scraperStateModel.initializeScraperState(this.SCRAPER_TYPE, today);
+            await ScraperStateModel.initializeScraperState(this.SCRAPER_TYPE, today);
             return today;
         }
     }
@@ -176,7 +174,7 @@ export class ContinuousScraper extends ScraperClient {
         }
 
         // Enable the scraper when starting
-        await this.scraperStateModel.setScraperEnabled(this.SCRAPER_TYPE, true);
+        await ScraperStateModel.setScraperEnabled(this.SCRAPER_TYPE, true);
 
         this.isRunning = true;
         this.shouldStop = false;
@@ -217,7 +215,7 @@ export class ContinuousScraper extends ScraperClient {
         }
 
         // Disable the scraper when stopping
-        await this.scraperStateModel.setScraperEnabled(this.SCRAPER_TYPE, false);
+        await ScraperStateModel.setScraperEnabled(this.SCRAPER_TYPE, false);
 
         console.log('🛑 Stopping continuous scraper...');
         this.shouldStop = true;
@@ -234,7 +232,7 @@ export class ContinuousScraper extends ScraperClient {
         currentDate?: Date;
         lastUpdate?: Date;
     }> {
-        const state = await this.scraperStateModel.getScraperState(this.SCRAPER_TYPE);
+        const state = await ScraperStateModel.getScraperState(this.SCRAPER_TYPE);
 
         return {
             isRunning: this.isRunning,

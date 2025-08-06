@@ -2,16 +2,16 @@ import { prisma } from '@/lib/prisma';
 import { scraper_state } from '@prisma/client';
 
 export class ScraperStateModel {
-    constructor() {
+    private constructor() {
     }
 
-    async getScraperState(scraperType: string): Promise<scraper_state | null> {
-        return await prisma.scraper_state.findUnique({
+    static async getScraperState(scraperType: string): Promise<scraper_state | null> {
+        return prisma.scraper_state.findUnique({
             where: { scraper_type: scraperType }
         });
     }
 
-    async updateScraperState(scraperType: string, currentDate: Date): Promise<void> {
+    static async updateScraperState(scraperType: string, currentDate: Date): Promise<void> {
         await prisma.scraper_state.upsert({
             where: { scraper_type: scraperType },
             update: {
@@ -27,20 +27,20 @@ export class ScraperStateModel {
         });
     }
 
-    async initializeScraperState(scraperType: string, startDate: Date): Promise<void> {
-        const existing = await this.getScraperState(scraperType);
+    static async initializeScraperState(scraperType: string, startDate: Date): Promise<void> {
+        const existing = await ScraperStateModel.getScraperState(scraperType);
         if (!existing) {
-            await this.updateScraperState(scraperType, startDate);
+            await ScraperStateModel.updateScraperState(scraperType, startDate);
         }
     }
 
-    async isScraperEnabled(scraperType: string): Promise<boolean> {
-        const state = await this.getScraperState(scraperType);
-        return state?.enabled ?? false; // Default to false if no state exists
+    static async isScraperEnabled(scraperType: string): Promise<boolean> {
+        const state = await ScraperStateModel.getScraperState(scraperType);
+        return state?.enabled ?? false;
     }
 
-    async setScraperEnabled(scraperType: string, enabled: boolean): Promise<void> {
-        const existing = await this.getScraperState(scraperType);
+    static async setScraperEnabled(scraperType: string, enabled: boolean): Promise<void> {
+        const existing = await ScraperStateModel.getScraperState(scraperType);
 
         if (existing) {
             await prisma.scraper_state.update({

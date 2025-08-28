@@ -1,6 +1,7 @@
 import { ApiEndpoint, AuthType } from '@/types/api-types';
 import { GetDailyAvailabilityResponse, GetWeeklyAvailabilityResponse } from '@timothyw/ems-scraper-types';
 import { prisma } from '@/lib/prisma';
+import { decodeText } from '@/utils/decoding-utils';
 
 export const getWeeklyAvailabilityEndpoint: ApiEndpoint<undefined, GetWeeklyAvailabilityResponse> = {
     method: 'get',
@@ -124,9 +125,10 @@ export const getWeeklyAvailabilityEndpoint: ApiEndpoint<undefined, GetWeeklyAvai
                     }
 
                     return {
-                        room_name: room.room_name,
-                        room_type: room.roomTypeRel.room_type_name,
-                        building_name: room.buildingRel.building_name,
+                        room_name: decodeText(room.room_name),
+                        room_type: decodeText(room.roomTypeRel.room_type_name),
+                        custom_room_type: room.custom_room_type,
+                        building_name: decodeText(room.buildingRel.building_name),
                         availability
                     };
                 });

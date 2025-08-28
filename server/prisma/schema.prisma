@@ -130,10 +130,11 @@ model scraper_state {
 }
 
 model rel_rooms {
-  room_id       Int         @id
-  room_name     String      @db.VarChar(255)
-  building_id   Int
-  room_type_id  Int
+  room_id           Int         @id
+  room_name         String      @db.VarChar(255)
+  building_id       Int
+  room_type_id      Int
+  custom_room_type  String?     @db.VarChar(255)
   
   rawEventsRel  raw_events[]
   buildingRel   rel_buildings  @relation(fields: [building_id], references: [building_id])

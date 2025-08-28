@@ -11,7 +11,7 @@ interface NoLongerFoundEvent {
     no_longer_found_at: string;
 }
 
-interface RecentChange {
+interface RecentArchive {
     history_id: number;
     id: number; // This is the event_id
     version_number: number;
@@ -58,18 +58,18 @@ interface NewEvent {
 interface EventsState {
     // Data
     noLongerFoundEvents: NoLongerFoundEvent[];
-    recentChanges: RecentChange[];
+    recentArchives: RecentArchive[];
     newEvents: NewEvent[];
     lastRefresh: Date;
 
     // Loading states
     isLoading: boolean;
-    recentChangesLoading: boolean;
+    recentArchivesLoading: boolean;
     newEventsLoading: boolean;
 
     // Error states
     error: string | null;
-    recentChangesError: string | null;
+    recentArchivesError: string | null;
     newEventsError: string | null;
 
     // Polling control
@@ -78,19 +78,19 @@ interface EventsState {
 
     // Actions
     setNoLongerFoundEvents: (events: NoLongerFoundEvent[]) => void;
-    setRecentChanges: (changes: RecentChange[]) => void;
+    setRecentArchives: (changes: RecentArchive[]) => void;
     setNewEvents: (events: NewEvent[]) => void;
     setLoading: (loading: boolean) => void;
-    setRecentChangesLoading: (loading: boolean) => void;
+    setRecentArchivesLoading: (loading: boolean) => void;
     setNewEventsLoading: (loading: boolean) => void;
     setError: (error: string | null) => void;
-    setRecentChangesError: (error: string | null) => void;
+    setRecentArchivesError: (error: string | null) => void;
     setNewEventsError: (error: string | null) => void;
     setLastRefresh: (date: Date) => void;
 
     // Async actions
     fetchNoLongerFoundEvents: (token: string) => Promise<void>;
-    fetchRecentChanges: (token: string) => Promise<void>;
+    fetchRecentArchives: (token: string) => Promise<void>;
     fetchNewEvents: (token: string) => Promise<void>;
 
     // Polling control
@@ -101,27 +101,27 @@ interface EventsState {
 export const useEventsStore = create<EventsState>((set, get) => ({
     // Initial state
     noLongerFoundEvents: [],
-    recentChanges: [],
+    recentArchives: [],
     newEvents: [],
     lastRefresh: new Date(),
     isLoading: true,
-    recentChangesLoading: true,
+    recentArchivesLoading: true,
     newEventsLoading: true,
     error: null,
-    recentChangesError: null,
+    recentArchivesError: null,
     newEventsError: null,
     isPolling: false,
     pollingInterval: null,
 
     // Basic setters
     setNoLongerFoundEvents: (noLongerFoundEvents) => set({ noLongerFoundEvents }),
-    setRecentChanges: (recentChanges) => set({ recentChanges }),
+    setRecentArchives: (recentArchives) => set({ recentArchives }),
     setNewEvents: (newEvents) => set({ newEvents }),
     setLoading: (isLoading) => set({ isLoading }),
-    setRecentChangesLoading: (recentChangesLoading) => set({ recentChangesLoading }),
+    setRecentArchivesLoading: (recentArchivesLoading) => set({ recentArchivesLoading }),
     setNewEventsLoading: (newEventsLoading) => set({ newEventsLoading }),
     setError: (error) => set({ error }),
-    setRecentChangesError: (recentChangesError) => set({ recentChangesError }),
+    setRecentArchivesError: (recentArchivesError) => set({ recentArchivesError }),
     setNewEventsError: (newEventsError) => set({ newEventsError }),
     setLastRefresh: (lastRefresh) => set({ lastRefresh }),
 
@@ -149,9 +149,9 @@ export const useEventsStore = create<EventsState>((set, get) => ({
         }
     },
 
-    fetchRecentChanges: async (token: string) => {
+    fetchRecentArchives: async (token: string) => {
         try {
-            const response = await fetch('/api/events/recent-changes?limit=20', {
+            const response = await fetch('/api/events/recent-archives?limit=20', {
                 headers: {
                     'Authorization': `Bearer ${token}`,
                 },
@@ -159,16 +159,16 @@ export const useEventsStore = create<EventsState>((set, get) => ({
             const result = await response.json();
 
             if (result.success && result.data) {
-                get().setRecentChanges(result.data.changes);
-                get().setRecentChangesError(null);
+                get().setRecentArchives(result.data.changes);
+                get().setRecentArchivesError(null);
             } else {
-                get().setRecentChangesError(result.error?.message || 'Failed to fetch recent changes');
+                get().setRecentArchivesError(result.error?.message || 'Failed to fetch recent archives');
             }
         } catch (error) {
-            get().setRecentChangesError('Network error');
-            console.error('Failed to fetch recent changes:', error);
+            get().setRecentArchivesError('Network error');
+            console.error('Failed to fetch recent archives:', error);
         } finally {
-            get().setRecentChangesLoading(false);
+            get().setRecentArchivesLoading(false);
         }
     },
 
@@ -203,7 +203,7 @@ export const useEventsStore = create<EventsState>((set, get) => ({
         const fetchData = async () => {
             await Promise.all([
                 get().fetchNoLongerFoundEvents(token),
-                get().fetchRecentChanges(token),
+                get().fetchRecentArchives(token),
                 get().fetchNewEvents(token)
             ]);
             get().setLastRefresh(new Date());

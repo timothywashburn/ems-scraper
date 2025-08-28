@@ -3,9 +3,9 @@ import { EventModel } from '@/models/event-model';
 import { GetRecentChangesResponse, Serializer } from '@timothyw/ems-scraper-types';
 import { transformHistoryEventsToTyped } from '@/utils/event-transformers';
 
-export const getRecentChangesEndpoint: ApiEndpoint<undefined, GetRecentChangesResponse> = {
+export const getRecentArchivesEndpoint: ApiEndpoint<undefined, GetRecentChangesResponse> = {
     method: 'get',
-    path: '/api/events/recent-changes',
+    path: '/api/events/recent-archives',
     auth: AuthType.AUTHENTICATED,
     handler: async (req, res) => {
         try {
@@ -22,7 +22,7 @@ export const getRecentChangesEndpoint: ApiEndpoint<undefined, GetRecentChangesRe
                 return;
             }
 
-            const changes = await EventModel.getRecentChanges(limit);
+            const changes = await EventModel.getRecentArchives(limit);
 
             // Transform changes to properly typed format
             const typedChanges = transformHistoryEventsToTyped(changes);
@@ -36,11 +36,11 @@ export const getRecentChangesEndpoint: ApiEndpoint<undefined, GetRecentChangesRe
                 }
             });
         } catch (error) {
-            console.error('Error fetching recent changes:', error);
+            console.error('Error fetching recent archives:', error);
             res.status(500).json({
                 success: false,
                 error: {
-                    message: 'Failed to fetch recent changes',
+                    message: 'Failed to fetch recent archives',
                     code: 'FETCH_CHANGES_ERROR'
                 }
             });

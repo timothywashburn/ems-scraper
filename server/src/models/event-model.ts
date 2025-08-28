@@ -374,7 +374,6 @@ export class EventModel {
         }));
     }
 
-    // Get historical versions of an event
     static async getEventHistory(eventId: EventId): Promise<raw_events_history[]> {
         const results = await prisma.raw_events_history.findMany({
             where: { event_id: IdConverters.fromEventId(eventId) },
@@ -384,8 +383,7 @@ export class EventModel {
         return results;
     }
 
-    // Get the latest N changes across all events
-    static async getRecentChanges(limit: number = 50): Promise<raw_events_history[]> {
+    static async getRecentArchives(limit: number = 50): Promise<raw_events_history[]> {
         const results = await prisma.raw_events_history.findMany({
             orderBy: { archived_at: 'desc' },
             take: limit

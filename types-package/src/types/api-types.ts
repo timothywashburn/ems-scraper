@@ -47,7 +47,7 @@ export interface GetEventHistoryResponse {
   history: Serialized<RawHistoricalEventData>[];
 }
 
-export interface GetRecentChangesResponse {
+export interface GetRecentArchivesResponse {
   count: number;
   changes: Serialized<RawHistoricalEventData>[];
 }

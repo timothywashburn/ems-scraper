@@ -9,9 +9,9 @@ interface Props {
 
 export const EventHistoryOverview: React.FC<Props> = ({ onEventClick }) => {
     const {
-        recentChanges,
-        recentChangesLoading,
-        recentChangesError,
+        recentArchives,
+        recentArchivesLoading,
+        recentArchivesError,
     } = useEventsStore();
 
     const formatTimeWindow = (lastChecked: string, archivedAt: string) => {
@@ -65,42 +65,42 @@ export const EventHistoryOverview: React.FC<Props> = ({ onEventClick }) => {
         <div className="bg-gray-800 rounded-lg shadow border border-gray-700 p-6 flex flex-col">
             <h3 className="text-lg font-semibold text-white mb-4 flex items-center">
                 <Activity className="w-5 h-5 mr-2 text-blue-400" />
-                Recent Changes ({recentChanges.length})
+                Recent Archives ({recentArchives.length})
             </h3>
 
-            {recentChangesLoading ? (
+            {recentArchivesLoading ? (
                 <div className="flex-1 flex items-center justify-center">
-                    <div className="text-gray-400">Loading recent changes...</div>
+                    <div className="text-gray-400">Loading recent archives...</div>
                 </div>
-            ) : recentChangesError ? (
+            ) : recentArchivesError ? (
                 <div className="flex-1 flex items-center justify-center">
-                    <div className="text-red-400">{recentChangesError}</div>
+                    <div className="text-red-400">{recentArchivesError}</div>
                 </div>
-            ) : recentChanges.length === 0 ? (
+            ) : recentArchives.length === 0 ? (
                 <div className="flex-1 flex items-center justify-center">
                     <div className="text-center text-gray-400">
                         <Calendar className="w-12 h-12 mx-auto mb-4 text-gray-500" />
-                        <p>No recent event changes</p>
+                        <p>No recent event archives</p>
                         <p className="text-sm mt-2">
-                            Recent event modifications will appear here.
+                            Recently archived event versions will appear here.
                         </p>
                     </div>
                 </div>
             ) : (
                 <div className="flex-1 overflow-y-auto space-y-3">
-                    {recentChanges.map((change, index) => (
+                    {recentArchives.map((archive, index) => (
                         <EventCard
-                            key={`${change.id || 'unknown'}-${change.version_number}-${index}`}
-                            eventId={change.id?.toString() || 'unknown'}
-                            eventName={change.event_name}
-                            eventStart={change.event_start}
-                            eventEnd={change.event_end}
-                            building={change.building}
-                            room={change.room}
-                            groupName={change.group_name}
-                            statusLine={formatTimeWindow(change.last_checked, change.archived_at)}
+                            key={`${archive.id || 'unknown'}-${archive.version_number}-${index}`}
+                            eventId={archive.id?.toString() || 'unknown'}
+                            eventName={archive.event_name}
+                            eventStart={archive.event_start}
+                            eventEnd={archive.event_end}
+                            building={archive.building}
+                            room={archive.room}
+                            groupName={archive.group_name}
+                            statusLine={formatTimeWindow(archive.last_checked, archive.archived_at)}
                             statusColor="blue"
-                            bottomLine={`${change.change_count} change${change.change_count !== 1 ? 's' : ''} • Version ${change.version_number}`}
+                            bottomLine={`${archive.change_count} change${archive.change_count !== 1 ? 's' : ''} • Archived Version ${archive.version_number}`}
                             onClick={onEventClick}
                         />
                     ))}

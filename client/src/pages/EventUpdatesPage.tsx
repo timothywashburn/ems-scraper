@@ -51,7 +51,7 @@ export const EventUpdatesPage: React.FC = () => {
                 {/* Left Panel - New Events */}
                 <NewEvents onEventClick={handleEventClick} />
 
-                {/* Middle Panel - Recent Changes */}
+                {/* Middle Panel - Recent Archives */}
                 <EventHistoryOverview onEventClick={handleEventClick} />
 
                 {/* Right Panel - No Longer Found Events */}

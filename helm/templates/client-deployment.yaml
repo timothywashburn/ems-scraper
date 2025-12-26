@@ -2,9 +2,6 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: client
-  namespace: {{ .Values.namespace }}
-  labels:
-    app: client
 spec:
   replicas: 1
   revisionHistoryLimit: 3
@@ -16,10 +13,12 @@ spec:
       labels:
         app: client
     spec:
+      imagePullSecrets:
+      - name: dockerhub-registry
       containers:
       - name: client
-        image: {{ .Values.image.registry }}-client:{{ .Values.image.client.tag }}
-        imagePullPolicy: {{ .Values.client.image.pullPolicy }}
+        image: {{ .Values.image.client.name }}:{{ .Values.image.client.tag | default "latest" }}
+        imagePullPolicy: Always
         ports:
         - containerPort: 80
         resources:

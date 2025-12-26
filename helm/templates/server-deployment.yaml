@@ -2,9 +2,6 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: server
-  namespace: {{ .Values.namespace }}
-  labels:
-    app: server
 spec:
   replicas: 1
   revisionHistoryLimit: 3
@@ -16,25 +13,20 @@ spec:
       labels:
         app: server
     spec:
+      imagePullSecrets:
+      - name: dockerhub-registry
       containers:
       - name: server
-        image: {{ .Values.image.registry }}-server:{{ .Values.image.server.tag }}
-        imagePullPolicy: {{ .Values.image.pullPolicy }}
+        image: {{ .Values.image.server.name }}:{{ .Values.image.server.tag | default "latest" }}
+        imagePullPolicy: Always
         ports:
         - containerPort: 3100
         env:
         - name: NODE_ENV
           value: "production"
-        - name: DATABASE_URL
-          valueFrom:
-            secretKeyRef:
-              name: mysql-secret
-              key: database-url
-        - name: MYSQL_PASSWORD
-          valueFrom:
-            secretKeyRef:
-              name: mysql-secret
-              key: root-password
+        envFrom:
+        - secretRef:
+            name: env-vars
         resources:
           requests:
             memory: "256Mi"

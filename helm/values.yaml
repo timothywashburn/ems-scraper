@@ -1,25 +1,8 @@
-image:
-  registry: kyrokrypt/ems-scraper
-  pullPolicy: Always
-  client:
-    tag: latest
-  server:
-    tag: latest
-
-client:
-  image:
-    registry: kyrokrypt/ems-scraper
-    pullPolicy: Always
-    tag: latest
-
 ingress:
-  host: "ems.timothyw.dev"
+  host:
   ingressClassName: traefik
 
-namespace: "ems-scraper"
-
 mysql:
-  port: "30306"
+  port:
   storage:
-    size: "10Gi"
-    storageClass: "local"
+    size: 1Gi

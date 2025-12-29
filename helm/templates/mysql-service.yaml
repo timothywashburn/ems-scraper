@@ -9,4 +9,5 @@ spec:
   - port: 3306
     targetPort: 3306
     nodePort: {{ .Values.mysql.port }}
+    name: mysql
   type: NodePort

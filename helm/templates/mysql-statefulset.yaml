@@ -13,6 +13,10 @@ spec:
       labels:
         app: mysql
     spec:
+      volumes:
+      - name: mysql-data
+        persistentVolumeClaim:
+          claimName: mysql-pvc
       containers:
       - name: mysql
         image: mysql:9.5
@@ -52,11 +56,3 @@ spec:
           initialDelaySeconds: 10
           periodSeconds: 5
           timeoutSeconds: 3
-  volumeClaimTemplates:
-  - metadata:
-      name: mysql-data
-    spec:
-      accessModes: ["ReadWriteOnce"]
-      resources:
-        requests:
-          storage: {{ .Values.mysql.storage.size }}

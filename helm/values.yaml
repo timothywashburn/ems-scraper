@@ -5,4 +5,5 @@ ingress:
 mysql:
   port:
   storage:
+    volumeName: ""
     size: 1Gi

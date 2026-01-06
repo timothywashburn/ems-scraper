@@ -13,8 +13,6 @@ spec:
       labels:
         app: server
     spec:
-      imagePullSecrets:
-      - name: dockerhub-registry
       containers:
       - name: server
         image: {{ .Values.image.server.name }}:{{ .Values.image.server.tag | default "latest" }}

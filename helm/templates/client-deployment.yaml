@@ -13,8 +13,6 @@ spec:
       labels:
         app: client
     spec:
-      imagePullSecrets:
-      - name: dockerhub-registry
       containers:
       - name: client
         image: {{ .Values.image.client.name }}:{{ .Values.image.client.tag | default "latest" }}
